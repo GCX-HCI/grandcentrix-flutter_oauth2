@@ -15,8 +15,14 @@ class OAuth2Interceptor implements Interceptor {
   Future onError(DioError error) async => error;
 
   @override
-  Future onRequest(RequestOptions options) async =>
-      await _handler.authenticate(options);
+  Future onRequest(RequestOptions options) async {
+    var token = await _handler.authenticate();
+
+    options.headers[HeaderType.AUTHORIZATION] =
+        "${AuthorizationType.BEARER} ${token.accessToken}";
+
+    return options;
+  }
 
   @override
   Future onResponse(Response response) async => response;

@@ -15,9 +15,14 @@ class Credentials {
   Credentials(this.username, this.password);
 }
 
-class _HeaderType {
+class HeaderType {
   static const CONTENT_TYPE = 'content-type';
   static const AUTHORIZATION = 'authorization';
+}
+
+class AuthorizationType {
+  static const BEARER = 'Bearer';
+  static const BASIC = 'Basic';
 }
 
 class _ResponseDataField {
@@ -44,11 +49,6 @@ class _GrantType {
   static const REFRESH_TOKEN = 'refresh_token';
 }
 
-class _AuthHeaderType {
-  static const BEARER = 'Bearer';
-  static const BASIC = 'Basic';
-}
-
 class Token {
   String accessToken;
   String refreshToken;
@@ -66,7 +66,7 @@ class Token {
 
     var data = response.data;
 
-    var contentTypeString = response.headers[_HeaderType.CONTENT_TYPE];
+    var contentTypeString = response.headers[HeaderType.CONTENT_TYPE];
     if (contentTypeString == null) {
       throw new FormatException('Missing Content-Type string.');
     }
@@ -86,7 +86,7 @@ class Token {
     }
 
     if (data[_ResponseDataField.TOKEN_TYPE].toLowerCase() !=
-        _AuthHeaderType.BEARER.toLowerCase()) {
+        AuthorizationType.BEARER.toLowerCase()) {
       throw new FormatException(
           'Unknown token type "${data[_ResponseDataField.TOKEN_TYPE]}"');
     }
@@ -127,7 +127,7 @@ class OAuth2 {
       [this._additionalHeaders]);
 
   // TODO get rid of RequestOptions here
-  Future<RequestOptions> authenticate(RequestOptions options) async {
+  Future<Token> authenticate() async {
     // TODO save refresh token safely on device and restore it
     if (_latestToken != null) {
       if (_latestToken.isExpired) {
@@ -137,10 +137,7 @@ class OAuth2 {
       _latestToken = await _getToken();
     }
 
-    options.headers[_HeaderType.AUTHORIZATION] =
-        "${_AuthHeaderType.BEARER} ${_latestToken.accessToken}";
-
-    return options;
+    return _latestToken;
   }
 
   Future<Token> _getToken() async {
@@ -166,7 +163,7 @@ class OAuth2 {
     var startTime = new DateTime.now();
 
     Options options = Options(contentType: Headers.formUrlEncodedContentType);
-    options.headers[_HeaderType.AUTHORIZATION] = _basicAuthHeader(
+    options.headers[HeaderType.AUTHORIZATION] = _basicAuthHeader(
         _clientCredentials.username, _clientCredentials.password);
 
     if (_additionalHeaders != null && _additionalHeaders.isNotEmpty) {
@@ -189,7 +186,7 @@ class OAuth2 {
   }
 
   String _basicAuthHeader(String identifier, String secret) =>
-      '${_AuthHeaderType.BASIC} ' +
+      '${AuthorizationType.BASIC} ' +
       base64Encode(utf8.encode('$identifier:$secret'));
 
   void _handleResponseError(Response response) {
