@@ -61,13 +61,8 @@ class Token {
   String refreshToken;
   DateTime expiration;
 
-  Token(this.accessToken, this.refreshToken, this.expiration);
-
-  bool get isExpired =>
-      expiration != null && new DateTime.now().isAfter(expiration);
-
   /// Validates the response and creates a new [Token] object in the end
-  static from(Response response, DateTime startTime) {
+  factory Token(Response response, DateTime startTime) {
     if (response == null || response.data is! Map) {
       throw new FormatException('Response data cannot be read.');
     }
@@ -115,9 +110,14 @@ class Token {
         ? null
         : startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
 
-    return Token(
+    return Token._internal(
         data[_ResponseDataField.ACCESS_TOKEN], refreshToken, expiration);
   }
+
+  Token._internal(this.accessToken, this.refreshToken, this.expiration);
+
+  bool get isExpired =>
+      expiration != null && new DateTime.now().isAfter(expiration);
 }
 
 class OAuth2 {
@@ -181,7 +181,7 @@ class OAuth2 {
     try {
       var response = await _httpClient.post(_authorizationEndpoint.toString(),
           data: body, options: options);
-      return Token.from(response, startTime);
+      return Token(response, startTime);
     } catch (e) {
       if (e.response != null) {
         _handleResponseError(e.response);
