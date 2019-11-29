@@ -52,6 +52,7 @@ class _RequestDataField {
 /// Grant types included in OAuth 2.0
 class _GrantType {
   static const PASSWORD = 'password';
+  static const CLIENT_CREDENTIALS = 'client_credentials';
   static const REFRESH_TOKEN = 'refresh_token';
 }
 
@@ -127,12 +128,14 @@ class OAuth2 {
   Credentials _clientCredentials;
   Credentials _userCredentials;
   Map<String, String> _additionalHeaders;
+  String _grantType;
 
   Token _latestToken;
 
   OAuth2(this._authorizationEndpoint, this._clientCredentials,
+      [this._grantType = _GrantType.CLIENT_CREDENTIALS,
       this._userCredentials,
-      [this._additionalHeaders]);
+      this._additionalHeaders]);
 
   // TODO get rid of RequestOptions here
   Future<Token> authenticate() async {
@@ -149,11 +152,13 @@ class OAuth2 {
   }
 
   Future<Token> _getToken() async {
-    var body = {
-      _RequestDataField.GRANT_TYPE: _GrantType.PASSWORD,
-      _RequestDataField.USERNAME: _userCredentials.username,
-      _RequestDataField.PASSWORD: _userCredentials.password
-    };
+    var body = _grantType == _GrantType.CLIENT_CREDENTIALS
+        ? {_RequestDataField.GRANT_TYPE: _GrantType.CLIENT_CREDENTIALS}
+        : {
+            _RequestDataField.GRANT_TYPE: _GrantType.PASSWORD,
+            _RequestDataField.USERNAME: _userCredentials.username,
+            _RequestDataField.PASSWORD: _userCredentials.password
+          };
 
     return _requestToken(body);
   }
