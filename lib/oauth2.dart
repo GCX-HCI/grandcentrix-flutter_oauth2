@@ -142,10 +142,19 @@ class Token {
 
 /// Configuration for [OAuth2]
 class Config {
+  /// The endpoint to send the token request to
   Uri authorizationEndpoint;
+
+  /// The client credentials used to authorize
   Credentials clientCredentials;
+
+  /// The user credentials used to authorize. Only used if grant type is 'password'
   Credentials userCredentials;
+
+  /// Additional headers to add to the token request
   Map<String, dynamic> additionalHeaders;
+
+  /// Grant type as defined by [GrantType]. Default is 'client_credentials'
   String grantType;
 
   Config(
@@ -158,6 +167,8 @@ class Config {
   }
 }
 
+/// Handles the OAuth 2.0 flow.
+/// It's the main class that you have to interact with.
 class OAuth2 {
   Dio _httpClient = Dio();
   Config _config;
@@ -165,6 +176,10 @@ class OAuth2 {
 
   OAuth2(this._config);
 
+  /// Requests a token from the endpoint and returns it.
+  ///
+  /// If there is already a token available, the expiration will be checked.
+  /// If the available token is expired, a new token will be requested by using the refresh token.
   Future<Token> authenticate() async {
     if (_latestToken == null) {
       // TODO save refresh token safely on device and restore it
@@ -182,6 +197,7 @@ class OAuth2 {
     return _latestToken;
   }
 
+  /// Gets a new token considering the configured grant type
   Future<Token> _getToken() async {
     var body = _config.grantType == GrantType.CLIENT_CREDENTIALS
         ? {_RequestDataField.GRANT_TYPE: GrantType.CLIENT_CREDENTIALS}
@@ -194,6 +210,7 @@ class OAuth2 {
     return _requestToken(body);
   }
 
+  /// Refreshs the current token by using the refresh token
   Future<Token> _refreshToken(var refreshToken) async {
     var body = {
       _RequestDataField.GRANT_TYPE: GrantType.REFRESH_TOKEN,
@@ -203,6 +220,7 @@ class OAuth2 {
     return _requestToken(body);
   }
 
+  /// General token request used to get and refresh token
   Future<Token> _requestToken(var body) async {
     var startTime = new DateTime.now();
 
@@ -235,6 +253,7 @@ class OAuth2 {
       '${AuthorizationType.BASIC} ' +
       base64Encode(utf8.encode('$identifier:$secret'));
 
+  /// Validates an error response and throws an exception in the end
   void _handleResponseError(Response response) {
     var data = response.data;
 
