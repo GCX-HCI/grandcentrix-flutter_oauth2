@@ -132,7 +132,7 @@ class Config {
   Config(
       {this.authorizationEndpoint,
       this.clientCredentials,
-      this.grantType,
+      this.grantType = GrantType.CLIENT_CREDENTIALS,
       this.userCredentials,
       Map<String, dynamic> additionalHeaders}) {
     this.additionalHeaders = additionalHeaders ?? {};
