@@ -152,10 +152,12 @@ class OAuth2 {
       _latestToken = await _getToken();
     }
 
-    if (_latestToken.isExpired && _latestToken.refreshToken != null) {
-      _latestToken = await _refreshToken(_latestToken.refreshToken);
-    } else {
-      throw new Exception();
+    if (_latestToken.isExpired) {
+      if (_latestToken.refreshToken != null) {
+        _latestToken = await _refreshToken(_latestToken.refreshToken);
+      } else {
+        throw new Exception();
+      }
     }
 
     return _latestToken;
