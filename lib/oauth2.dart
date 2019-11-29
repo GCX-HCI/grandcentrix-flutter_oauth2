@@ -28,6 +28,13 @@ class AuthorizationType {
   static const BASIC = 'Basic';
 }
 
+/// Grant types included in OAuth 2.0
+class GrantType {
+  static const PASSWORD = 'password';
+  static const CLIENT_CREDENTIALS = 'client_credentials';
+  static const REFRESH_TOKEN = 'refresh_token';
+}
+
 /// Fields which are possibly included in a OAuth 2.0 response
 class _ResponseDataField {
   static const ACCESS_TOKEN = 'access_token';
@@ -46,13 +53,6 @@ class _RequestDataField {
   static const GRANT_TYPE = 'grant_type';
   static const USERNAME = 'username';
   static const PASSWORD = 'password';
-  static const REFRESH_TOKEN = 'refresh_token';
-}
-
-/// Grant types included in OAuth 2.0
-class _GrantType {
-  static const PASSWORD = 'password';
-  static const CLIENT_CREDENTIALS = 'client_credentials';
   static const REFRESH_TOKEN = 'refresh_token';
 }
 
@@ -121,43 +121,53 @@ class Token {
       expiration != null && new DateTime.now().isAfter(expiration);
 }
 
+/// Configuration for [OAuth2]
+class Config {
+  Uri authorizationEndpoint;
+  Credentials clientCredentials;
+  Credentials userCredentials;
+  Map<String, dynamic> additionalHeaders;
+  String grantType;
+
+  Config(
+      {this.authorizationEndpoint,
+      this.clientCredentials,
+      this.grantType,
+      this.userCredentials,
+      Map<String, dynamic> additionalHeaders}) {
+    this.additionalHeaders = additionalHeaders ?? {};
+  }
+}
+
 class OAuth2 {
   Dio _httpClient = Dio();
-
-  Uri _authorizationEndpoint;
-  Credentials _clientCredentials;
-  Credentials _userCredentials;
-  Map<String, String> _additionalHeaders;
-  String _grantType;
-
+  Config _config;
   Token _latestToken;
 
-  OAuth2(this._authorizationEndpoint, this._clientCredentials,
-      [this._grantType = _GrantType.CLIENT_CREDENTIALS,
-      this._userCredentials,
-      this._additionalHeaders]);
+  OAuth2(this._config);
 
-  // TODO get rid of RequestOptions here
   Future<Token> authenticate() async {
-    // TODO save refresh token safely on device and restore it
-    if (_latestToken != null) {
-      if (_latestToken.isExpired) {
-        _latestToken = await _refreshToken(_latestToken.refreshToken);
-      }
-    } else {
+    if (_latestToken == null) {
+      // TODO save refresh token safely on device and restore it
       _latestToken = await _getToken();
+    }
+
+    if (_latestToken.isExpired && _latestToken.refreshToken != null) {
+      _latestToken = await _refreshToken(_latestToken.refreshToken);
+    } else {
+      throw new Exception();
     }
 
     return _latestToken;
   }
 
   Future<Token> _getToken() async {
-    var body = _grantType == _GrantType.CLIENT_CREDENTIALS
-        ? {_RequestDataField.GRANT_TYPE: _GrantType.CLIENT_CREDENTIALS}
+    var body = _config.grantType == GrantType.CLIENT_CREDENTIALS
+        ? {_RequestDataField.GRANT_TYPE: GrantType.CLIENT_CREDENTIALS}
         : {
-            _RequestDataField.GRANT_TYPE: _GrantType.PASSWORD,
-            _RequestDataField.USERNAME: _userCredentials.username,
-            _RequestDataField.PASSWORD: _userCredentials.password
+            _RequestDataField.GRANT_TYPE: GrantType.PASSWORD,
+            _RequestDataField.USERNAME: _config.userCredentials.username,
+            _RequestDataField.PASSWORD: _config.userCredentials.password
           };
 
     return _requestToken(body);
@@ -165,7 +175,7 @@ class OAuth2 {
 
   Future<Token> _refreshToken(var refreshToken) async {
     var body = {
-      _RequestDataField.GRANT_TYPE: _GrantType.REFRESH_TOKEN,
+      _RequestDataField.GRANT_TYPE: GrantType.REFRESH_TOKEN,
       _RequestDataField.REFRESH_TOKEN: refreshToken
     };
 
@@ -177,15 +187,17 @@ class OAuth2 {
 
     Options options = Options(contentType: Headers.formUrlEncodedContentType);
     options.headers[HeaderType.AUTHORIZATION] = _basicAuthHeader(
-        _clientCredentials.username, _clientCredentials.password);
+        _config.clientCredentials.username, _config.clientCredentials.password);
 
-    if (_additionalHeaders != null && _additionalHeaders.isNotEmpty) {
-      options.headers.addAll(_additionalHeaders);
+    if (_config.additionalHeaders.isNotEmpty) {
+      options.headers.addAll(_config.additionalHeaders);
     }
 
     try {
-      var response = await _httpClient.post(_authorizationEndpoint.toString(),
-          data: body, options: options);
+      var response = await _httpClient.post(
+          _config.authorizationEndpoint.toString(),
+          data: body,
+          options: options);
       return Token(response, startTime);
     } catch (e) {
       if (e.response != null) {
