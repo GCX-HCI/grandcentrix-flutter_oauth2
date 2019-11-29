@@ -7,12 +7,43 @@ import 'package:dio/dio.dart';
 /// This allows credential expiration checks to remain valid for a reasonable
 /// amount of time.
 const _expirationGrace = const Duration(seconds: 10);
+const _tokenTypeBearer = 'Bearer';
+const _basicAuthHeaderStart = 'Basic ';
 
 class Credentials {
   String username;
   String password;
 
   Credentials(this.username, this.password);
+}
+
+class _HeaderType {
+  static const CONTENT_TYPE = 'content-type';
+  static const AUTHORIZATION = 'authorization';
+}
+
+class _ResponseDataField {
+  static const ACCESS_TOKEN = 'access_token';
+  static const TOKEN_TYPE = 'token_type';
+  static const EXPIRES_IN = 'expires_in';
+  static const REFRESH_TOKEN = 'refresh_token';
+
+  static const ERROR = 'error';
+  static const ERROR_LIST = 'errors';
+  static const ERROR_DESCRIPTION = 'error_description';
+  static const ERROR_URI = 'error_uri';
+}
+
+class _RequestDataField {
+  static const GRANT_TYPE = 'grant_type';
+  static const USERNAME = 'username';
+  static const PASSWORD = 'password';
+  static const REFRESH_TOKEN = 'refresh_token';
+}
+
+class _GrantType {
+  static const PASSWORD = 'password';
+  static const REFRESH_TOKEN = 'refresh_token';
 }
 
 class Token {
@@ -32,12 +63,15 @@ class Token {
 
     var data = response.data;
 
-    var contentTypeString = response.headers['content-type'];
+    var contentTypeString = response.headers[_HeaderType.CONTENT_TYPE];
     if (contentTypeString == null) {
       throw new FormatException('Missing Content-Type string.');
     }
 
-    for (var requiredParameter in ['access_token', 'token_type']) {
+    for (var requiredParameter in [
+      _ResponseDataField.ACCESS_TOKEN,
+      _ResponseDataField.TOKEN_TYPE
+    ]) {
       if (!data.containsKey(requiredParameter)) {
         throw new FormatException(
             'did not contain required parameter "$requiredParameter"');
@@ -48,29 +82,30 @@ class Token {
       }
     }
 
-    if (data['token_type'].toLowerCase() != 'bearer') {
-      throw new FormatException('Unknown token type "${data['token_type']}"');
+    if (data[_ResponseDataField.TOKEN_TYPE].toLowerCase() !=
+        _tokenTypeBearer.toLowerCase()) {
+      throw new FormatException(
+          'Unknown token type "${data[_ResponseDataField.TOKEN_TYPE]}"');
     }
 
-    var expiresIn = data['expires_in'];
+    var expiresIn = data[_ResponseDataField.EXPIRES_IN];
     if (expiresIn != null && expiresIn is! int) {
       throw new FormatException(
           'parameter "expires_in" was not an int, was "$expiresIn"');
     }
 
-    for (var name in ['refresh_token', 'id_token', 'scope']) {
-      var value = data[name];
-      if (value != null && value is! String) {
-        throw new FormatException(
-            'parameter "$name" was not a string, was "$value"');
-      }
+    var refreshToken = data[_ResponseDataField.REFRESH_TOKEN];
+    if (refreshToken != null && refreshToken is! String) {
+      throw new FormatException(
+          'parameter "refresh_token" was not a string, was "$refreshToken"');
     }
 
     var expiration = expiresIn == null
         ? null
         : startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
 
-    return Token(data['access_token'], data['refresh_token'], expiration);
+    return Token(
+        data[_ResponseDataField.ACCESS_TOKEN], refreshToken, expiration);
   }
 }
 
@@ -88,6 +123,7 @@ class OAuth2 {
       this._userCredentials,
       [this._additionalHeaders]);
 
+  // TODO get rid of RequestOptions here
   Future<RequestOptions> authenticate(RequestOptions options) async {
     // TODO save refresh token safely on device and restore it
     if (_latestToken != null) {
@@ -98,23 +134,27 @@ class OAuth2 {
       _latestToken = await _getToken();
     }
 
-    options.headers['authorization'] = "Bearer ${_latestToken.accessToken}";
+    options.headers[_HeaderType.AUTHORIZATION] =
+        "$_tokenTypeBearer ${_latestToken.accessToken}";
 
     return options;
   }
 
   Future<Token> _getToken() async {
     var body = {
-      'grant_type': 'password',
-      'username': _userCredentials.username,
-      'password': _userCredentials.password
+      _RequestDataField.GRANT_TYPE: _GrantType.PASSWORD,
+      _RequestDataField.USERNAME: _userCredentials.username,
+      _RequestDataField.PASSWORD: _userCredentials.password
     };
 
     return _requestToken(body);
   }
 
   Future<Token> _refreshToken(var refreshToken) async {
-    var body = {'grant_type': 'refresh_token', 'refresh_token': refreshToken};
+    var body = {
+      _RequestDataField.GRANT_TYPE: _GrantType.REFRESH_TOKEN,
+      _RequestDataField.REFRESH_TOKEN: refreshToken
+    };
 
     return _requestToken(body);
   }
@@ -123,7 +163,7 @@ class OAuth2 {
     var startTime = new DateTime.now();
 
     Options options = Options(contentType: Headers.formUrlEncodedContentType);
-    options.headers['authorization'] = basicAuthHeader(
+    options.headers[_HeaderType.AUTHORIZATION] = _basicAuthHeader(
         _clientCredentials.username, _clientCredentials.password);
 
     if (_additionalHeaders != null && _additionalHeaders.isNotEmpty) {
@@ -145,25 +185,33 @@ class OAuth2 {
     return null;
   }
 
-  String basicAuthHeader(String identifier, String secret) =>
-      'Basic ' + base64Encode(utf8.encode('$identifier:$secret'));
+  String _basicAuthHeader(String identifier, String secret) =>
+      '$_basicAuthHeaderStart ' +
+      base64Encode(utf8.encode('$identifier:$secret'));
 
   void _handleResponseError(Response response) {
     var data = response.data;
 
-    if (!data.containsKey('error') && !data.containsKey('errors')) {
+    if (!data.containsKey(_ResponseDataField.ERROR) &&
+        !data.containsKey(_ResponseDataField.ERROR_LIST)) {
       throw new FormatException(
           'did not contain required parameter "error" or "errors"');
-    } else if (data.containsKey('error') && data['error'] is! String) {
+    } else if (data.containsKey(_ResponseDataField.ERROR) &&
+        data[_ResponseDataField.ERROR] is! String) {
       throw new FormatException(
           'required parameter "error" was not a string, was '
-          '"${data["error"]}"');
-    } else if (data.containsKey('errors') && data['errors'] is! List) {
-      throw new FormatException('required parameter "error" was not a map, was '
-          '"${data["error"]}"');
+          '"${data[_ResponseDataField.ERROR]}"');
+    } else if (data.containsKey(_ResponseDataField.ERROR_LIST) &&
+        data[_ResponseDataField.ERROR_LIST] is! List) {
+      throw new FormatException(
+          'required parameter "errors" was not a map, was '
+          '"${data[_ResponseDataField.ERROR_LIST]}"');
     }
 
-    for (var name in ['error_description', 'error_uri']) {
+    for (var name in [
+      _ResponseDataField.ERROR_DESCRIPTION,
+      _ResponseDataField.ERROR_URI
+    ]) {
       var value = data[name];
 
       if (value != null && value is! String) {
@@ -172,7 +220,7 @@ class OAuth2 {
       }
     }
 
-    var description = data['error_description'];
+    var description = data[_ResponseDataField.ERROR_DESCRIPTION];
     throw new Exception(description);
   }
 }
