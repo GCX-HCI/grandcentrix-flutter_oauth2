@@ -8,6 +8,25 @@ import 'package:dio/dio.dart';
 /// amount of time.
 const _expirationGrace = const Duration(seconds: 10);
 
+class AuthorizationException implements Exception {
+  final String error;
+  final String description;
+  final Uri uri;
+
+  AuthorizationException(this.error, this.description, this.uri);
+
+  @override
+  String toString() {
+    return "$error: $description (${uri.toString()})";
+  }
+}
+
+class ExpirationException implements Exception {
+  Token token;
+
+  ExpirationException(this.token);
+}
+
 /// Credentials of any type e.g. client and user
 class Credentials {
   String username;
@@ -156,7 +175,7 @@ class OAuth2 {
       if (_latestToken.refreshToken != null) {
         _latestToken = await _refreshToken(_latestToken.refreshToken);
       } else {
-        throw new Exception();
+        throw new ExpirationException(_latestToken);
       }
     }
 
@@ -247,7 +266,9 @@ class OAuth2 {
       }
     }
 
+    var error = data[_ResponseDataField.ERROR];
     var description = data[_ResponseDataField.ERROR_DESCRIPTION];
-    throw new Exception(description);
+    var uri = data[_ResponseDataField.ERROR_URI];
+    throw new AuthorizationException(error, description, uri);
   }
 }
