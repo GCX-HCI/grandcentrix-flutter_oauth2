@@ -7,8 +7,6 @@ import 'package:dio/dio.dart';
 /// This allows credential expiration checks to remain valid for a reasonable
 /// amount of time.
 const _expirationGrace = const Duration(seconds: 10);
-const _tokenTypeBearer = 'Bearer';
-const _basicAuthHeaderStart = 'Basic ';
 
 class Credentials {
   String username;
@@ -44,6 +42,11 @@ class _RequestDataField {
 class _GrantType {
   static const PASSWORD = 'password';
   static const REFRESH_TOKEN = 'refresh_token';
+}
+
+class _AuthHeaderType {
+  static const BEARER = 'Bearer';
+  static const BASIC = 'Basic';
 }
 
 class Token {
@@ -83,7 +86,7 @@ class Token {
     }
 
     if (data[_ResponseDataField.TOKEN_TYPE].toLowerCase() !=
-        _tokenTypeBearer.toLowerCase()) {
+        _AuthHeaderType.BEARER.toLowerCase()) {
       throw new FormatException(
           'Unknown token type "${data[_ResponseDataField.TOKEN_TYPE]}"');
     }
@@ -135,7 +138,7 @@ class OAuth2 {
     }
 
     options.headers[_HeaderType.AUTHORIZATION] =
-        "$_tokenTypeBearer ${_latestToken.accessToken}";
+        "${_AuthHeaderType.BEARER} ${_latestToken.accessToken}";
 
     return options;
   }
@@ -186,7 +189,7 @@ class OAuth2 {
   }
 
   String _basicAuthHeader(String identifier, String secret) =>
-      '$_basicAuthHeaderStart ' +
+      '${_AuthHeaderType.BASIC} ' +
       base64Encode(utf8.encode('$identifier:$secret'));
 
   void _handleResponseError(Response response) {
