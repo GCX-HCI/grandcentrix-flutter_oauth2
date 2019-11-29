@@ -8,6 +8,7 @@ import 'package:dio/dio.dart';
 /// amount of time.
 const _expirationGrace = const Duration(seconds: 10);
 
+/// Credentials of any type e.g. client and user
 class Credentials {
   String username;
   String password;
@@ -15,16 +16,19 @@ class Credentials {
   Credentials(this.username, this.password);
 }
 
+/// Types of request / response headers used in OAuth 2.0
 class HeaderType {
   static const CONTENT_TYPE = 'content-type';
   static const AUTHORIZATION = 'authorization';
 }
 
+/// Types of authorization headers used in OAuth 2.0
 class AuthorizationType {
   static const BEARER = 'Bearer';
   static const BASIC = 'Basic';
 }
 
+/// Fields which are possibly included in a OAuth 2.0 response
 class _ResponseDataField {
   static const ACCESS_TOKEN = 'access_token';
   static const TOKEN_TYPE = 'token_type';
@@ -37,6 +41,7 @@ class _ResponseDataField {
   static const ERROR_URI = 'error_uri';
 }
 
+/// Fields which are possibly included in a OAuth 2.0 request
 class _RequestDataField {
   static const GRANT_TYPE = 'grant_type';
   static const USERNAME = 'username';
@@ -44,11 +49,13 @@ class _RequestDataField {
   static const REFRESH_TOKEN = 'refresh_token';
 }
 
+/// Grant types included in OAuth 2.0
 class _GrantType {
   static const PASSWORD = 'password';
   static const REFRESH_TOKEN = 'refresh_token';
 }
 
+/// OAuth 2.0 token information including access token, refresh token and expiration date
 class Token {
   String accessToken;
   String refreshToken;
@@ -59,6 +66,7 @@ class Token {
   bool get isExpired =>
       expiration != null && new DateTime.now().isAfter(expiration);
 
+  /// Validates the response and creates a new [Token] object in the end
   static from(Response response, DateTime startTime) {
     if (response == null || response.data is! Map) {
       throw new FormatException('Response data cannot be read.');
