@@ -116,7 +116,7 @@ class DefaultTokenStorage implements TokenStorage {
       expiration = DateTime.now().millisecondsSinceEpoch.toString();
     }
 
-    return Token._internal(accessToken, refreshToken,
+    return Token(accessToken, refreshToken,
         DateTime.fromMillisecondsSinceEpoch(int.parse(expiration)));
   }
 
@@ -143,8 +143,10 @@ class Token {
   String refreshToken;
   DateTime expiration;
 
+  Token(this.accessToken, this.refreshToken, this.expiration);
+
   /// Validates the response and creates a new [Token] object in the end
-  factory Token(Response response, DateTime startTime) {
+  factory Token.fromResponse(Response response, DateTime startTime) {
     if (response == null || response.data is! Map) {
       throw new FormatException('Response data cannot be read.');
     }
@@ -192,11 +194,9 @@ class Token {
         ? null
         : startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
 
-    return Token._internal(
+    return Token(
         data[_ResponseDataField.ACCESS_TOKEN], refreshToken, expiration);
   }
-
-  Token._internal(this.accessToken, this.refreshToken, this.expiration);
 
   bool get isExpired =>
       expiration != null && new DateTime.now().isAfter(expiration);
@@ -308,7 +308,7 @@ class OAuth2 {
           _config.authorizationEndpoint.toString(),
           data: body,
           options: options);
-      return Token(response, startTime);
+      return Token.fromResponse(response, startTime);
     } catch (e) {
       if (e.response != null) {
         _handleResponseError(e.response);
