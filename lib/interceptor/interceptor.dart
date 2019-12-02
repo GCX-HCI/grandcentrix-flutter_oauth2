@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_oauth2/const.dart';
+import 'package:flutter_oauth2/helper/const.dart';
 import 'package:flutter_oauth2/oauth2.dart';
 
 /// [Dio] [Interceptor] which uses OAuth 2.0 to authenticate against a

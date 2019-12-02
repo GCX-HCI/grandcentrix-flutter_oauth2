@@ -1,4 +1,4 @@
-import 'package:flutter_oauth2/token.dart';
+import 'package:flutter_oauth2/token/token.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Storage to save token persistently

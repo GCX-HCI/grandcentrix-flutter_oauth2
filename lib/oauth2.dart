@@ -1,10 +1,10 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
-import 'package:flutter_oauth2/const.dart';
-import 'package:flutter_oauth2/exception.dart';
-import 'package:flutter_oauth2/token.dart';
-import 'package:flutter_oauth2/token_storage.dart';
+import 'package:flutter_oauth2/helper/const.dart';
+import 'package:flutter_oauth2/helper/exception.dart';
+import 'package:flutter_oauth2/token/token.dart';
+import 'package:flutter_oauth2/token/token_storage.dart';
 
 /// Credentials of any type e.g. client and user
 class Credentials {

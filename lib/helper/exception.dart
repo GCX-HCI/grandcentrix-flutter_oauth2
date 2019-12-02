@@ -1,4 +1,4 @@
-import 'package:flutter_oauth2/token.dart';
+import 'package:flutter_oauth2/token/token.dart';
 
 class AuthorizationException implements Exception {
   final String error;
