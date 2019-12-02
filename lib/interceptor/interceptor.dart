@@ -16,16 +16,15 @@ class OAuth2DioInterceptor implements Interceptor {
 
   @override
   Future onRequest(RequestOptions options) async {
-    var token;
     try {
-      token = await _handler.authenticate();
+      var token = await _handler.authenticate();
+
+      // Add authorization header with bearer token
+      options.headers[HeaderType.AUTHORIZATION] =
+          "${AuthorizationType.BEARER} ${token.accessToken}";
     } catch (e) {
       return DioError(error: e);
     }
-
-    // Add authorization header with bearer token
-    options.headers[HeaderType.AUTHORIZATION] =
-        "${AuthorizationType.BEARER} ${token.accessToken}";
 
     return options;
   }
