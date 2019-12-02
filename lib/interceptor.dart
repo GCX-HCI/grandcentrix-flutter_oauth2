@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_oauth2/const.dart';
 import 'package:flutter_oauth2/oauth2.dart';
 
 /// [Dio] [Interceptor] which uses OAuth 2.0 to authenticate against a
@@ -15,7 +16,7 @@ class OAuth2Interceptor implements Interceptor {
 
   @override
   Future onRequest(RequestOptions options) async {
-    var token = null;
+    var token;
     try {
       token = await _handler.authenticate();
     } catch (e) {
