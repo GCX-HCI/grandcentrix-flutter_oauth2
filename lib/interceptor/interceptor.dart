@@ -4,10 +4,10 @@ import 'package:flutter_oauth2/oauth2.dart';
 
 /// [Dio] [Interceptor] which uses OAuth 2.0 to authenticate against a
 /// server before sending a request.
-class OAuth2Interceptor implements Interceptor {
+class OAuth2DioInterceptor implements Interceptor {
   OAuth2 _handler;
 
-  OAuth2Interceptor(Config configuration) {
+  OAuth2DioInterceptor(Config configuration) {
     _handler = OAuth2(configuration);
   }
 
