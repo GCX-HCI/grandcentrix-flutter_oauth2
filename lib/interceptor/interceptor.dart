@@ -7,9 +7,7 @@ import 'package:flutter_oauth2/oauth2.dart';
 class OAuth2DioInterceptor implements Interceptor {
   OAuth2 _handler;
 
-  OAuth2DioInterceptor(Config configuration) {
-    _handler = OAuth2(configuration);
-  }
+  OAuth2DioInterceptor(this._handler);
 
   @override
   Future onError(DioError error) async => error;
