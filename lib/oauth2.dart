@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart' as store;
 
 /// The amount of time to add as a "grace period" for credential expiration.
 ///
@@ -73,6 +74,67 @@ class _RequestDataField {
   static const USERNAME = 'username';
   static const PASSWORD = 'password';
   static const REFRESH_TOKEN = 'refresh_token';
+}
+
+/// Storage to save token persistently
+abstract class TokenStorage {
+  /// Write token
+  Future write(Token token);
+
+  /// Read token
+  Future<Token> read();
+
+  /// Clears the current saved token
+  Future clear();
+}
+
+/// Default implementation of [TokenStorage] using encryption
+///
+/// See https://github.com/mogol/flutter_secure_storage for usage requirements
+class DefaultTokenStorage implements TokenStorage {
+  static const _ACCESS_TOKEN_KEY = "oauth2_access_token";
+  static const _REFRESH_TOKEN_KEY = "oauth2_refresh_token";
+  static const _KEY_EXPIRATION = "oauth2_expiration";
+
+  store.FlutterSecureStorage _storage;
+
+  DefaultTokenStorage() {
+    _storage = new store.FlutterSecureStorage();
+  }
+
+  @override
+  Future<Token> read() async {
+    var accessToken = await _storage.read(key: _ACCESS_TOKEN_KEY);
+    var refreshToken = await _storage.read(key: _REFRESH_TOKEN_KEY);
+    var expiration = await _storage.read(key: _KEY_EXPIRATION);
+
+    if (accessToken == null || refreshToken == null) {
+      return null;
+    }
+
+    if (expiration == null) {
+      expiration = DateTime.now().millisecondsSinceEpoch.toString();
+    }
+
+    return Token._internal(accessToken, refreshToken,
+        DateTime.fromMillisecondsSinceEpoch(int.parse(expiration)));
+  }
+
+  @override
+  Future write(Token token) async {
+    await _storage.write(key: _ACCESS_TOKEN_KEY, value: token.accessToken);
+    await _storage.write(key: _REFRESH_TOKEN_KEY, value: token.refreshToken);
+    await _storage.write(
+        key: _KEY_EXPIRATION,
+        value: token.expiration.millisecondsSinceEpoch.toString());
+  }
+
+  @override
+  Future clear() async {
+    await _storage.delete(key: _ACCESS_TOKEN_KEY);
+    await _storage.delete(key: _REFRESH_TOKEN_KEY);
+    await _storage.delete(key: _KEY_EXPIRATION);
+  }
 }
 
 /// OAuth 2.0 token information including access token, refresh token and expiration date
@@ -154,16 +216,21 @@ class Config {
   /// Additional headers to add to the token request
   Map<String, dynamic> additionalHeaders;
 
-  /// Grant type as defined by [GrantType]. Default is 'client_credentials'
+  /// Grant type as defined by [GrantType]. Default is [GrantType.CLIENT_CREDENTIALS]
   String grantType;
+
+  /// Storage to save token into. Default is [DefaultTokenStorage]
+  TokenStorage tokenStorage;
 
   Config(
       {this.authorizationEndpoint,
       this.clientCredentials,
       this.grantType = GrantType.CLIENT_CREDENTIALS,
       this.userCredentials,
-      Map<String, dynamic> additionalHeaders}) {
+      Map<String, dynamic> additionalHeaders,
+      TokenStorage tokenStorage}) {
     this.additionalHeaders = additionalHeaders ?? {};
+    this.tokenStorage = tokenStorage ?? DefaultTokenStorage();
   }
 }
 
@@ -181,8 +248,11 @@ class OAuth2 {
   /// If there is already a token available, the expiration will be checked.
   /// If the available token is expired, a new token will be requested by using the refresh token.
   Future<Token> authenticate() async {
+    if (_config.tokenStorage != null) {
+      _latestToken = _latestToken ?? await _config.tokenStorage.read();
+    }
+
     if (_latestToken == null) {
-      // TODO save refresh token safely on device and restore it
       _latestToken = await _getToken();
     }
 
@@ -194,6 +264,7 @@ class OAuth2 {
       }
     }
 
+    await _config.tokenStorage.write(_latestToken);
     return _latestToken;
   }
 
