@@ -66,18 +66,23 @@ class OAuth2 {
 
     if (_latestToken == null) {
       _latestToken = await _getToken();
+      await _onNewToken(_latestToken);
     }
 
     if (_latestToken.isExpired) {
       if (_latestToken.refreshToken != null) {
         _latestToken = await _refreshToken(_latestToken.refreshToken);
+        await _onNewToken(_latestToken);
       } else {
         throw new ExpirationException(_latestToken);
       }
     }
 
-    await _config.tokenStorage.write(_latestToken);
     return _latestToken;
+  }
+
+  Future _onNewToken(Token token) async {
+    await _config.tokenStorage.write(_latestToken);
   }
 
   /// Gets a new token considering the configured grant type
