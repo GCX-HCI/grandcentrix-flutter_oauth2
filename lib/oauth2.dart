@@ -34,16 +34,57 @@ class Config {
   /// Storage to save token into. Default is [DefaultTokenStorage]
   TokenStorage tokenStorage;
 
+  /// Function called when an error response is received. Default is validating OAuth 2.0 fields
+  Function(Response) errorHandler;
+
   Config(
       {this.authorizationEndpoint,
       this.clientCredentials,
       this.grantType = GrantType.CLIENT_CREDENTIALS,
       this.userCredentials,
       Map<String, dynamic> additionalHeaders,
-      TokenStorage tokenStorage}) {
+      TokenStorage tokenStorage,
+      this.errorHandler = _defaultErrorHandler}) {
     this.additionalHeaders = additionalHeaders ?? {};
     this.tokenStorage = tokenStorage ?? DefaultTokenStorage();
   }
+}
+
+/// Validates an error response and throws an exception in the end
+_defaultErrorHandler(Response response) {
+  var data = response.data;
+
+  if (!data.containsKey(ResponseDataField.ERROR) &&
+      !data.containsKey(ResponseDataField.ERROR_LIST)) {
+    throw new FormatException(
+        'did not contain required parameter "error" or "errors"');
+  } else if (data.containsKey(ResponseDataField.ERROR) &&
+      data[ResponseDataField.ERROR] is! String) {
+    throw new FormatException(
+        'required parameter "error" was not a string, was '
+        '"${data[ResponseDataField.ERROR]}"');
+  } else if (data.containsKey(ResponseDataField.ERROR_LIST) &&
+      data[ResponseDataField.ERROR_LIST] is! List) {
+    throw new FormatException('required parameter "errors" was not a map, was '
+        '"${data[ResponseDataField.ERROR_LIST]}"');
+  }
+
+  for (var name in [
+    ResponseDataField.ERROR_DESCRIPTION,
+    ResponseDataField.ERROR_URI
+  ]) {
+    var value = data[name];
+
+    if (value != null && value is! String) {
+      throw new FormatException(
+          'parameter "$name" was not a string, was "$value"');
+    }
+  }
+
+  var error = data[ResponseDataField.ERROR];
+  var description = data[ResponseDataField.ERROR_DESCRIPTION];
+  var uri = data[ResponseDataField.ERROR_URI];
+  throw new AuthorizationException(error, description, uri);
 }
 
 /// Handles the OAuth 2.0 flow.
@@ -128,7 +169,7 @@ class OAuth2 {
       return Token.fromResponse(response, startTime);
     } catch (e) {
       if (e.response != null) {
-        _handleResponseError(e.response);
+        this._config.errorHandler(e.response);
       } else {
         throw new Exception("Error when trying to send request");
       }
@@ -140,42 +181,4 @@ class OAuth2 {
   String _basicAuthHeader(String identifier, String secret) =>
       '${AuthorizationType.BASIC} ' +
       base64Encode(utf8.encode('$identifier:$secret'));
-
-  /// Validates an error response and throws an exception in the end
-  void _handleResponseError(Response response) {
-    var data = response.data;
-
-    if (!data.containsKey(ResponseDataField.ERROR) &&
-        !data.containsKey(ResponseDataField.ERROR_LIST)) {
-      throw new FormatException(
-          'did not contain required parameter "error" or "errors"');
-    } else if (data.containsKey(ResponseDataField.ERROR) &&
-        data[ResponseDataField.ERROR] is! String) {
-      throw new FormatException(
-          'required parameter "error" was not a string, was '
-          '"${data[ResponseDataField.ERROR]}"');
-    } else if (data.containsKey(ResponseDataField.ERROR_LIST) &&
-        data[ResponseDataField.ERROR_LIST] is! List) {
-      throw new FormatException(
-          'required parameter "errors" was not a map, was '
-          '"${data[ResponseDataField.ERROR_LIST]}"');
-    }
-
-    for (var name in [
-      ResponseDataField.ERROR_DESCRIPTION,
-      ResponseDataField.ERROR_URI
-    ]) {
-      var value = data[name];
-
-      if (value != null && value is! String) {
-        throw new FormatException(
-            'parameter "$name" was not a string, was "$value"');
-      }
-    }
-
-    var error = data[ResponseDataField.ERROR];
-    var description = data[ResponseDataField.ERROR_DESCRIPTION];
-    var uri = data[ResponseDataField.ERROR_URI];
-    throw new AuthorizationException(error, description, uri);
-  }
 }
