@@ -100,7 +100,11 @@ class OAuth2 {
   ///
   /// If there is already a token available, the expiration will be checked.
   /// If the available token is expired, a new token will be requested by using the refresh token.
-  Future<Token> authenticate() async {
+  Future<Token> authenticate({bool reset = false}) async {
+    if (reset) {
+      await _reset();
+    }
+
     if (_config.tokenStorage != null) {
       _latestToken = _latestToken ?? await _config.tokenStorage.read();
     }
@@ -120,6 +124,12 @@ class OAuth2 {
     }
 
     return _latestToken;
+  }
+
+  /// Resets all caches
+  Future _reset() async {
+    await _config.tokenStorage.clear();
+    _latestToken = null;
   }
 
   Future _onNewToken(Token token) async {
