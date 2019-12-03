@@ -119,7 +119,9 @@ class OAuth2 {
         _latestToken = await _refreshToken(_latestToken.refreshToken);
         await _onNewToken(_latestToken);
       } else {
-        throw new ExpirationException(_latestToken);
+        // If there is no refresh token, try to get a new token by credentials
+        _latestToken = await _getToken();
+        await _onNewToken(_latestToken);
       }
     }
 
