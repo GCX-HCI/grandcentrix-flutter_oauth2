@@ -1,8 +1,7 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter_oauth2/helper/const.dart';
 import 'package:flutter_oauth2/helper/exception.dart';
+import 'package:flutter_oauth2/helper/utils.dart';
 import 'package:flutter_oauth2/token/token.dart';
 import 'package:flutter_oauth2/token/token_storage.dart';
 
@@ -166,7 +165,7 @@ class OAuth2 {
     var startTime = new DateTime.now();
 
     Options options = Options(contentType: Headers.formUrlEncodedContentType);
-    options.headers[HeaderType.AUTHORIZATION] = _basicAuthHeader(
+    options.headers[HeaderType.AUTHORIZATION] = basicAuthHeader(
         _config.clientCredentials.username, _config.clientCredentials.password);
 
     if (_config.additionalHeaders.isNotEmpty) {
@@ -189,8 +188,4 @@ class OAuth2 {
 
     return null;
   }
-
-  String _basicAuthHeader(String identifier, String secret) =>
-      '${AuthorizationType.BASIC} ' +
-      base64Encode(utf8.encode('$identifier:$secret'));
 }
