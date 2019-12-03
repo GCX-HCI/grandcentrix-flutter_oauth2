@@ -69,5 +69,5 @@ class Token {
   }
 
   bool get isExpired =>
-      expiration != null && new DateTime.now().isAfter(expiration);
+      expiration == null || DateTime.now().isAfter(expiration);
 }
