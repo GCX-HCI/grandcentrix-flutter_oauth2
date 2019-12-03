@@ -19,7 +19,7 @@ abstract class TokenStorage {
 class DefaultTokenStorage implements TokenStorage {
   static const _ACCESS_TOKEN_KEY = "oauth2_access_token";
   static const _REFRESH_TOKEN_KEY = "oauth2_refresh_token";
-  static const _KEY_EXPIRATION = "oauth2_expiration";
+  static const _KEY_EXPIRATION_IN_MILLIS = "oauth2_expiration";
 
   FlutterSecureStorage _storage;
 
@@ -31,33 +31,37 @@ class DefaultTokenStorage implements TokenStorage {
   Future<Token> read() async {
     var accessToken = await _storage.read(key: _ACCESS_TOKEN_KEY);
     var refreshToken = await _storage.read(key: _REFRESH_TOKEN_KEY);
-    var expiration = await _storage.read(key: _KEY_EXPIRATION);
+    var expirationInMillis =
+        await _storage.read(key: _KEY_EXPIRATION_IN_MILLIS);
 
-    if (accessToken == null || refreshToken == null) {
+    if (accessToken == null) {
       return null;
     }
 
-    if (expiration == null) {
-      expiration = DateTime.now().millisecondsSinceEpoch.toString();
-    }
+    var expiration = expirationInMillis != null
+        ? DateTime.fromMillisecondsSinceEpoch(int.parse(expirationInMillis))
+        : null;
 
-    return Token(accessToken, refreshToken,
-        DateTime.fromMillisecondsSinceEpoch(int.parse(expiration)));
+    return Token(accessToken, refreshToken, expiration);
   }
 
   @override
   Future write(Token token) async {
     await _storage.write(key: _ACCESS_TOKEN_KEY, value: token.accessToken);
-    await _storage.write(key: _REFRESH_TOKEN_KEY, value: token.refreshToken);
-    await _storage.write(
-        key: _KEY_EXPIRATION,
-        value: token.expiration.millisecondsSinceEpoch.toString());
+    if (token.refreshToken != null) {
+      await _storage.write(key: _REFRESH_TOKEN_KEY, value: token.refreshToken);
+    }
+    if (token.expiration != null) {
+      await _storage.write(
+          key: _KEY_EXPIRATION_IN_MILLIS,
+          value: token.expiration.millisecondsSinceEpoch.toString());
+    }
   }
 
   @override
   Future clear() async {
     await _storage.delete(key: _ACCESS_TOKEN_KEY);
     await _storage.delete(key: _REFRESH_TOKEN_KEY);
-    await _storage.delete(key: _KEY_EXPIRATION);
+    await _storage.delete(key: _KEY_EXPIRATION_IN_MILLIS);
   }
 }
