@@ -36,6 +36,9 @@ class Config {
   /// Function called when an error response is received. Default is validating OAuth 2.0 fields
   Function(Response) errorHandler;
 
+  /// The HTTP client to use
+  Dio httpClient;
+
   Config(
       {this.authorizationEndpoint,
       this.clientCredentials,
@@ -43,9 +46,11 @@ class Config {
       this.userCredentials,
       Map<String, dynamic> additionalHeaders,
       TokenStorage tokenStorage,
-      this.errorHandler = _defaultErrorHandler}) {
+      this.errorHandler = _defaultErrorHandler,
+      Dio httpClient}) {
     this.additionalHeaders = additionalHeaders ?? {};
     this.tokenStorage = tokenStorage ?? DefaultTokenStorage();
+    this.httpClient = httpClient ?? Dio();
   }
 }
 
@@ -89,7 +94,6 @@ _defaultErrorHandler(Response response) {
 /// Handles the OAuth 2.0 flow.
 /// It's the main class that you have to interact with.
 class OAuth2 {
-  Dio _httpClient = Dio();
   Config _config;
   Token _latestToken;
 
@@ -174,7 +178,7 @@ class OAuth2 {
     }
 
     try {
-      var response = await _httpClient.post(
+      var response = await _config.httpClient.post(
           _config.authorizationEndpoint.toString(),
           data: body,
           options: options);
