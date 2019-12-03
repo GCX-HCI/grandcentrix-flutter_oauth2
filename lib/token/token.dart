@@ -71,3 +71,15 @@ class Token {
   bool get isExpired =>
       expiration == null || DateTime.now().isAfter(expiration);
 }
+
+/// Storage to save token persistently
+abstract class TokenStorage {
+  /// Write token
+  Future write(Token token);
+
+  /// Read token
+  Future<Token> read();
+
+  /// Clears the current saved token
+  Future clear();
+}

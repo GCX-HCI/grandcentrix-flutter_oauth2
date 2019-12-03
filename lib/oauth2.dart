@@ -3,7 +3,6 @@ import 'package:flutter_oauth2/helper/const.dart';
 import 'package:flutter_oauth2/helper/exception.dart';
 import 'package:flutter_oauth2/helper/utils.dart';
 import 'package:flutter_oauth2/token/token.dart';
-import 'package:flutter_oauth2/token/token_storage.dart';
 
 /// Credentials of any type e.g. client and user
 class Credentials {
@@ -45,11 +44,10 @@ class Config {
       this.grantType = GrantType.CLIENT_CREDENTIALS,
       this.userCredentials,
       Map<String, dynamic> additionalHeaders,
-      TokenStorage tokenStorage,
+      this.tokenStorage,
       this.errorHandler = _defaultErrorHandler,
       Dio httpClient}) {
     this.additionalHeaders = additionalHeaders ?? {};
-    this.tokenStorage = tokenStorage ?? DefaultTokenStorage();
     this.httpClient = httpClient ?? Dio();
   }
 }
@@ -134,12 +132,16 @@ class OAuth2 {
 
   /// Resets all caches
   Future _reset() async {
-    await _config.tokenStorage.clear();
+    if (_config.tokenStorage != null) {
+      await _config.tokenStorage.clear();
+    }
     _latestToken = null;
   }
 
   Future _onNewToken(Token token) async {
-    await _config.tokenStorage.write(_latestToken);
+    if (_config.tokenStorage != null) {
+      await _config.tokenStorage.write(_latestToken);
+    }
   }
 
   /// Gets a new token considering the configured grant type
