@@ -21,13 +21,14 @@ void main() {
   const _ANY_ERROR = "anyError";
   const _ANY_ERROR_DESCRIPTION = "anyErrorDescription";
 
-  Dio _mockClient = MockClient();
+  Dio _mockClient;
   Credentials _anyCredentials = Credentials("any", "any");
   Uri _anyAuthorizationEndpoint = Uri.https("mock.gcx", "/mockToken");
   Headers _anyHeaders = Headers();
   Uri _anyErrorUri = Uri.https("mock.gcx", "/mockError");
 
   setUp(() {
+    _mockClient = MockClient();
     _anyHeaders.add(HeaderType.CONTENT_TYPE, _ANY_CONTENT_TYPE);
   });
 
@@ -54,11 +55,15 @@ void main() {
       OAuth2 handler = OAuth2(config);
       var token = await handler.authenticate();
 
+      // Expect the client to be called once
+      var verified = verify(_mockClient.post(
+          _anyAuthorizationEndpoint.toString(),
+          data: captureAnyNamed('data'),
+          options: anyNamed('options')));
+      verified.called(1);
+
       // Expect the request data to be correct
-      var data = verify(_mockClient.post(_anyAuthorizationEndpoint.toString(),
-              data: captureAnyNamed('data'), options: anyNamed('options')))
-          .captured;
-      expect(data.first,
+      expect(verified.captured.first,
           {RequestDataField.GRANT_TYPE: GrantType.CLIENT_CREDENTIALS});
 
       // Expect the valid token to be returned
@@ -91,11 +96,15 @@ void main() {
       OAuth2 handler = OAuth2(config);
       var token = await handler.authenticate();
 
+      // Expect the client to be called once
+      var verified = verify(_mockClient.post(
+          _anyAuthorizationEndpoint.toString(),
+          data: captureAnyNamed('data'),
+          options: anyNamed('options')));
+      verified.called(1);
+
       // Expect the request data to be correct
-      var data = verify(_mockClient.post(_anyAuthorizationEndpoint.toString(),
-              data: captureAnyNamed('data'), options: anyNamed('options')))
-          .captured;
-      expect(data.first, {
+      expect(verified.captured.first, {
         RequestDataField.GRANT_TYPE: GrantType.PASSWORD,
         RequestDataField.USERNAME: _anyCredentials.username,
         RequestDataField.PASSWORD: _anyCredentials.password
@@ -375,10 +384,15 @@ void main() {
       OAuth2 handler = OAuth2(config);
       var token = await handler.authenticate();
 
+      // Expect the client to be called once
+      var verified = verify(_mockClient.post(
+          _anyAuthorizationEndpoint.toString(),
+          data: captureAnyNamed('data'),
+          options: anyNamed('options')));
+      verified.called(1);
+
       // Expect the request data to be correct
-      var data = verify(_mockClient.post(_anyAuthorizationEndpoint.toString(),
-              data: captureAnyNamed('data'), options: anyNamed('options')))
-          .captured;
+      var data = verified.captured;
       expect(data.first, {
         RequestDataField.GRANT_TYPE: GrantType.REFRESH_TOKEN,
         RequestDataField.REFRESH_TOKEN: _ANOTHER_REFRESH_TOKEN
@@ -422,11 +436,15 @@ void main() {
       OAuth2 handler = OAuth2(config);
       var token = await handler.authenticate();
 
+      // Expect the client to be called once
+      var verified = verify(_mockClient.post(
+          _anyAuthorizationEndpoint.toString(),
+          data: captureAnyNamed('data'),
+          options: anyNamed('options')));
+      verified.called(1);
+
       // Expect the request data to be correct
-      var data = verify(_mockClient.post(_anyAuthorizationEndpoint.toString(),
-              data: captureAnyNamed('data'), options: anyNamed('options')))
-          .captured;
-      expect(data.first,
+      expect(verified.captured.first,
           {RequestDataField.GRANT_TYPE: GrantType.CLIENT_CREDENTIALS});
 
       // Expect the valid token to be returned
