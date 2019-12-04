@@ -3,6 +3,7 @@ import 'package:flutter_oauth2/helper/const.dart';
 import 'package:flutter_oauth2/helper/exception.dart';
 import 'package:flutter_oauth2/helper/utils.dart';
 import 'package:flutter_oauth2/token/token.dart';
+import 'package:meta/meta.dart';
 
 /// Credentials of any type e.g. client and user
 class Credentials {
@@ -39,9 +40,9 @@ class Config {
   Dio httpClient;
 
   Config(
-      {this.authorizationEndpoint,
-      this.clientCredentials,
+      {@required this.authorizationEndpoint,
       this.grantType = GrantType.CLIENT_CREDENTIALS,
+      this.clientCredentials,
       this.userCredentials,
       Map<String, dynamic> additionalHeaders,
       this.tokenStorage,
