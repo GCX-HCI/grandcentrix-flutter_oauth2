@@ -343,4 +343,96 @@ void main() {
       expect(token.expiration, isNotNull);
     });
   });
+
+  group("Expiration", () {
+    test('If token is expired then refresh token', () async {
+      // Assuming that the client returns a valid token when calling
+      // the authorization endpoint
+      when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: anyNamed('data'), options: anyNamed('options')))
+          .thenAnswer((_) => Future.value(Response(data: {
+                ResponseDataField.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+                ResponseDataField.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+                ResponseDataField.EXPIRES_IN: _ANY_EXPIRES_IN,
+                ResponseDataField.TOKEN_TYPE: _ANY_TOKEN_TYPE
+              }, headers: _anyHeaders)));
+
+      // Assuming that a token storage is put into the config
+      // which returns an expired token
+      var tokenStorage = MockTokenStorage();
+      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
+          _ANOTHER_ACCESS_TOKEN,
+          _ANOTHER_REFRESH_TOKEN,
+          DateTime.now().subtract(Duration(minutes: 10)))));
+      var config = Config(
+          authorizationEndpoint: _anyAuthorizationEndpoint,
+          grantType: GrantType.CLIENT_CREDENTIALS,
+          clientCredentials: _anyCredentials,
+          httpClient: _mockClient,
+          tokenStorage: tokenStorage);
+
+      // If the OAuth2 authentication is called
+      OAuth2 handler = OAuth2(config);
+      var token = await handler.authenticate();
+
+      // Expect the request data to be correct
+      var data = verify(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: captureAnyNamed('data'), options: anyNamed('options')))
+          .captured;
+      expect(data.first, {
+        RequestDataField.GRANT_TYPE: GrantType.REFRESH_TOKEN,
+        RequestDataField.REFRESH_TOKEN: _ANOTHER_REFRESH_TOKEN
+      });
+
+      // Expect the valid token to be returned
+      expect(token.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token.expiration, isNotNull);
+    });
+
+    test(
+        'If token is expired and no refresh token is available get new token by credentials',
+        () async {
+      // Assuming that the client returns a valid token when calling
+      // the authorization endpoint
+      when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: anyNamed('data'), options: anyNamed('options')))
+          .thenAnswer((_) => Future.value(Response(data: {
+                ResponseDataField.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+                ResponseDataField.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+                ResponseDataField.EXPIRES_IN: _ANY_EXPIRES_IN,
+                ResponseDataField.TOKEN_TYPE: _ANY_TOKEN_TYPE
+              }, headers: _anyHeaders)));
+
+      // Assuming that a token storage is put into the config
+      // which returns an expired token without refresh token
+      var tokenStorage = MockTokenStorage();
+      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
+          _ANOTHER_ACCESS_TOKEN,
+          null,
+          DateTime.now().subtract(Duration(minutes: 10)))));
+      var config = Config(
+          authorizationEndpoint: _anyAuthorizationEndpoint,
+          grantType: GrantType.CLIENT_CREDENTIALS,
+          clientCredentials: _anyCredentials,
+          httpClient: _mockClient,
+          tokenStorage: tokenStorage);
+
+      // If the OAuth2 authentication is called
+      OAuth2 handler = OAuth2(config);
+      var token = await handler.authenticate();
+
+      // Expect the request data to be correct
+      var data = verify(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: captureAnyNamed('data'), options: anyNamed('options')))
+          .captured;
+      expect(data.first,
+          {RequestDataField.GRANT_TYPE: GrantType.CLIENT_CREDENTIALS});
+
+      // Expect the valid token to be returned
+      expect(token.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token.expiration, isNotNull);
+    });
+  });
 }
