@@ -409,7 +409,7 @@ void main() {
       var tokenStorage = MockTokenStorage();
       when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
           _ANOTHER_ACCESS_TOKEN,
-          null,
+          null, // no refresh token
           DateTime.now().subtract(Duration(minutes: 10)))));
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
