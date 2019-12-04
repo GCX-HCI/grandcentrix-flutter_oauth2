@@ -42,7 +42,7 @@ class Config {
   Config(
       {@required this.authorizationEndpoint,
       this.grantType = GrantType.CLIENT_CREDENTIALS,
-      this.clientCredentials,
+      @required this.clientCredentials,
       this.userCredentials,
       Map<String, dynamic> additionalHeaders,
       this.tokenStorage,
