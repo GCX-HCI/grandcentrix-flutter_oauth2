@@ -54,6 +54,13 @@ void main() {
       OAuth2 handler = OAuth2(config);
       var token = await handler.authenticate();
 
+      // Expect the request data to be correct
+      var data = verify(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: captureAnyNamed('data'), options: anyNamed('options')))
+          .captured;
+      expect(data.first,
+          {RequestDataField.GRANT_TYPE: GrantType.CLIENT_CREDENTIALS});
+
       // Expect the valid token to be returned
       expect(token.accessToken, _ANY_ACCESS_TOKEN);
       expect(token.refreshToken, null);
@@ -83,6 +90,16 @@ void main() {
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
       var token = await handler.authenticate();
+
+      // Expect the request data to be correct
+      var data = verify(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: captureAnyNamed('data'), options: anyNamed('options')))
+          .captured;
+      expect(data.first, {
+        RequestDataField.GRANT_TYPE: GrantType.PASSWORD,
+        RequestDataField.USERNAME: _anyCredentials.username,
+        RequestDataField.PASSWORD: _anyCredentials.password
+      });
 
       // Expect the valid token to be returned
       expect(token.accessToken, _ANY_ACCESS_TOKEN);
@@ -171,7 +188,7 @@ void main() {
         // Expect the authentication to fail
         await handler.authenticate();
         fail("An Exception is expected here!");
-      } on Exception catch (e) {
+      } on Exception catch (_) {
         // and to throw an exception
       }
     });
