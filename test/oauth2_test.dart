@@ -236,17 +236,7 @@ void main() {
     });
 
     test('is used to read token if no token is in memory', () async {
-      // Assuming that the client returns a valid token when calling
-      // the authorization endpoint
-      when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
-              data: anyNamed('data'), options: anyNamed('options')))
-          .thenAnswer((_) => Future.value(Response(data: {
-                ResponseDataField.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-                ResponseDataField.EXPIRES_IN: _ANY_EXPIRES_IN,
-                ResponseDataField.TOKEN_TYPE: _ANY_TOKEN_TYPE
-              }, headers: _anyHeaders)));
-
-      // and a token storage is put into the config
+      // Assuming that a token storage is put into the config
       var tokenStorage = MockTokenStorage();
       when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
           _ANOTHER_ACCESS_TOKEN,
@@ -326,6 +316,9 @@ void main() {
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
       var token = await handler.authenticate();
+
+      // Expect the read method of the token storage to be called
+      verify(tokenStorage.read());
 
       // Expect the valid token to be returned
       expect(token.accessToken, _ANY_ACCESS_TOKEN);
