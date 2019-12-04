@@ -97,7 +97,7 @@ void main() {
         ResponseDataField.ERROR: _ANY_ERROR,
         ResponseDataField.ERROR_DESCRIPTION: _ANY_ERROR_DESCRIPTION,
         ResponseDataField.ERROR_URI: _anyErrorUri.toString()
-      }, headers: _anyHeaders)));
+      })));
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -113,7 +113,7 @@ void main() {
         await handler.authenticate();
         fail("An AuthorizationException is expected here!");
       } on AuthorizationException catch (e) {
-        // an to throw an exception with an error description
+        // and to throw an exception with an error description
         expect(e.error, _ANY_ERROR);
         expect(e.description, _ANY_ERROR_DESCRIPTION);
         expect(e.uri, _anyErrorUri);
@@ -125,8 +125,7 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenThrow(
-              DioError(response: Response(data: {}, headers: _anyHeaders)));
+          .thenThrow(DioError(response: Response(data: {})));
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -142,8 +141,33 @@ void main() {
         await handler.authenticate();
         fail("An FormatException is expected here!");
       } on FormatException catch (e) {
-        // an to throw an exception
+        // and to throw an exception
         expect(e.message, isNotNull);
+      }
+    });
+
+    test('without response throws simple Exception', () async {
+      // Assuming that the client returns an invalid error when calling
+      // the authorization endpoint
+      when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: anyNamed('data'), options: anyNamed('options')))
+          .thenThrow(DioError());
+
+      var config = Config(
+          authorizationEndpoint: _anyAuthorizationEndpoint,
+          grantType: GrantType.PASSWORD,
+          clientCredentials: _anyCredentials,
+          userCredentials: _anyCredentials,
+          httpClient: _mockClient);
+
+      // If the OAuth2 authentication is called
+      OAuth2 handler = OAuth2(config);
+      try {
+        // Expect the authentication to fail
+        await handler.authenticate();
+        fail("An Exception is expected here!");
+      } on Exception catch (e) {
+        // and to throw an exception
       }
     });
   });
