@@ -22,13 +22,17 @@ void main() {
   const _ANY_ERROR_DESCRIPTION = "anyErrorDescription";
 
   Dio _mockClient;
-  Credentials _anyCredentials = Credentials("any", "any");
-  Uri _anyAuthorizationEndpoint = Uri.https("mock.gcx", "/mockToken");
-  Headers _anyHeaders = Headers();
-  Uri _anyErrorUri = Uri.https("mock.gcx", "/mockError");
+  Credentials _anyCredentials;
+  Uri _anyAuthorizationEndpoint;
+  Headers _anyHeaders;
+  Uri _anyErrorUri;
 
   setUp(() {
     _mockClient = MockClient();
+    _anyCredentials = Credentials("any", "any");
+    _anyAuthorizationEndpoint = Uri.https("mock.gcx", "/mockToken");
+    _anyErrorUri = Uri.https("mock.gcx", "/mockError");
+    _anyHeaders = Headers();
     _anyHeaders.add(HeaderType.CONTENT_TYPE, _ANY_CONTENT_TYPE);
   });
 
