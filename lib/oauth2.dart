@@ -185,7 +185,7 @@ class OAuth2 {
           data: body,
           options: options);
       return Token.fromResponse(response, startTime);
-    } catch (e) {
+    } on DioError catch (e) {
       if (e.response != null) {
         this._config.errorHandler(e.response);
       } else {
