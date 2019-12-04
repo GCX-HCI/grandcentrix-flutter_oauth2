@@ -85,7 +85,7 @@ _defaultErrorHandler(Response response) {
 
   var error = data[ResponseDataField.ERROR];
   var description = data[ResponseDataField.ERROR_DESCRIPTION];
-  var uri = data[ResponseDataField.ERROR_URI];
+  var uri = Uri.parse(data[ResponseDataField.ERROR_URI]);
   throw new AuthorizationException(error, description, uri);
 }
 
