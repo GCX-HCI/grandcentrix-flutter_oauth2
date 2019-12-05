@@ -17,6 +17,31 @@ void main() {
     _anyHeaders.add(HeaderTypeConst.CONTENT_TYPE, _ANY_CONTENT_TYPE);
   });
 
+  group("Expiration", () {
+    test('is expired if empty', () {
+      var token = Token(_ANY_ACCESS_TOKEN, _ANY_REFRESH_TOKEN, null);
+
+      // Expect the token to be expired
+      expect(token.isExpired, true);
+    });
+
+    test('is expired if date is in the past', () {
+      var token = Token(_ANY_ACCESS_TOKEN, _ANY_REFRESH_TOKEN,
+          DateTime.now().subtract(Duration(minutes: 10)));
+
+      // Expect the token to be expired
+      expect(token.isExpired, true);
+    });
+
+    test('is valid if date is in the future', () {
+      var token = Token(_ANY_ACCESS_TOKEN, _ANY_REFRESH_TOKEN,
+          DateTime.now().add(Duration(minutes: 10)));
+
+      // Expect the token to be valid
+      expect(token.isExpired, false);
+    });
+  });
+
   group("Factory", () {
     test('returns token if response is valid', () {
       var response = Response(data: {
