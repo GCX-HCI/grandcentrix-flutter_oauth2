@@ -28,7 +28,7 @@ class Config {
   Map<String, dynamic> additionalHeaders;
 
   /// Grant type as defined by [GrantType]. Default is [GrantType.CLIENT_CREDENTIALS]
-  String grantType;
+  GrantType grantType;
 
   /// Storage to save token into. By default tokens are not saved
   TokenStorage tokenStorage;
@@ -57,25 +57,25 @@ class Config {
 _defaultErrorHandler(Response response) {
   var data = response.data;
 
-  if (!data.containsKey(ResponseDataField.ERROR) &&
-      !data.containsKey(ResponseDataField.ERROR_LIST)) {
+  if (!data.containsKey(ResponseDataFieldConst.ERROR) &&
+      !data.containsKey(ResponseDataFieldConst.ERROR_LIST)) {
     throw new FormatException(
-        'did not contain required parameter "${ResponseDataField.ERROR}" or "${ResponseDataField.ERROR_LIST}"');
-  } else if (data.containsKey(ResponseDataField.ERROR) &&
-      data[ResponseDataField.ERROR] is! String) {
+        'did not contain required parameter "${ResponseDataFieldConst.ERROR}" or "${ResponseDataFieldConst.ERROR_LIST}"');
+  } else if (data.containsKey(ResponseDataFieldConst.ERROR) &&
+      data[ResponseDataFieldConst.ERROR] is! String) {
     throw new FormatException(
-        'required parameter "${ResponseDataField.ERROR}" was not a string, was '
-        '"${data[ResponseDataField.ERROR]}"');
-  } else if (data.containsKey(ResponseDataField.ERROR_LIST) &&
-      data[ResponseDataField.ERROR_LIST] is! List) {
+        'required parameter "${ResponseDataFieldConst.ERROR}" was not a string, was '
+        '"${data[ResponseDataFieldConst.ERROR]}"');
+  } else if (data.containsKey(ResponseDataFieldConst.ERROR_LIST) &&
+      data[ResponseDataFieldConst.ERROR_LIST] is! List) {
     throw new FormatException(
-        'required parameter "${ResponseDataField.ERROR_LIST}" was not a list, was '
-        '"${data[ResponseDataField.ERROR_LIST]}"');
+        'required parameter "${ResponseDataFieldConst.ERROR_LIST}" was not a list, was '
+        '"${data[ResponseDataFieldConst.ERROR_LIST]}"');
   }
 
   for (var name in [
-    ResponseDataField.ERROR_DESCRIPTION,
-    ResponseDataField.ERROR_URI
+    ResponseDataFieldConst.ERROR_DESCRIPTION,
+    ResponseDataFieldConst.ERROR_URI
   ]) {
     var value = data[name];
 
@@ -85,9 +85,9 @@ _defaultErrorHandler(Response response) {
     }
   }
 
-  var error = data[ResponseDataField.ERROR];
-  var description = data[ResponseDataField.ERROR_DESCRIPTION];
-  var uri = Uri.parse(data[ResponseDataField.ERROR_URI]);
+  var error = data[ResponseDataFieldConst.ERROR];
+  var description = data[ResponseDataFieldConst.ERROR_DESCRIPTION];
+  var uri = Uri.parse(data[ResponseDataFieldConst.ERROR_URI]);
   throw new AuthorizationException(error, description, uri);
 }
 
@@ -149,11 +149,11 @@ class OAuth2 {
   /// Gets a new token considering the configured grant type
   Future<Token> _getToken() async {
     var body = _config.grantType == GrantType.CLIENT_CREDENTIALS
-        ? {RequestDataField.GRANT_TYPE: GrantType.CLIENT_CREDENTIALS}
+        ? {RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS}
         : {
-            RequestDataField.GRANT_TYPE: GrantType.PASSWORD,
-            RequestDataField.USERNAME: _config.userCredentials.username,
-            RequestDataField.PASSWORD: _config.userCredentials.password
+            RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.PASSWORD,
+            RequestDataFieldConst.USERNAME: _config.userCredentials.username,
+            RequestDataFieldConst.PASSWORD: _config.userCredentials.password
           };
 
     return _requestToken(body);
@@ -162,8 +162,8 @@ class OAuth2 {
   /// Refreshes the current token by using the refresh token
   Future<Token> _refreshToken(var refreshToken) async {
     var body = {
-      RequestDataField.GRANT_TYPE: GrantType.REFRESH_TOKEN,
-      RequestDataField.REFRESH_TOKEN: refreshToken
+      RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.REFRESH_TOKEN,
+      RequestDataFieldConst.REFRESH_TOKEN: refreshToken
     };
 
     return _requestToken(body);
@@ -174,7 +174,7 @@ class OAuth2 {
     var startTime = new DateTime.now();
 
     Options options = Options(contentType: Headers.formUrlEncodedContentType);
-    options.headers[HeaderType.AUTHORIZATION] = basicAuthHeader(
+    options.headers[HeaderTypeConst.AUTHORIZATION] = basicAuthHeader(
         _config.clientCredentials.username, _config.clientCredentials.password);
 
     if (_config.additionalHeaders.isNotEmpty) {

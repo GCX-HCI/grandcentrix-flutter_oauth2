@@ -23,14 +23,14 @@ class Token {
 
     var data = response.data;
 
-    var contentTypeString = response.headers[HeaderType.CONTENT_TYPE];
+    var contentTypeString = response.headers[HeaderTypeConst.CONTENT_TYPE];
     if (contentTypeString == null) {
       throw new FormatException('Missing Content-Type string.');
     }
 
     for (var requiredParameter in [
-      ResponseDataField.ACCESS_TOKEN,
-      ResponseDataField.TOKEN_TYPE
+      ResponseDataFieldConst.ACCESS_TOKEN,
+      ResponseDataFieldConst.TOKEN_TYPE
     ]) {
       if (!data.containsKey(requiredParameter)) {
         throw new FormatException(
@@ -42,19 +42,19 @@ class Token {
       }
     }
 
-    if (data[ResponseDataField.TOKEN_TYPE].toLowerCase() !=
-        AuthorizationType.BEARER.toLowerCase()) {
+    if (data[ResponseDataFieldConst.TOKEN_TYPE].toLowerCase() !=
+        AuthorizationTypeConst.BEARER.toLowerCase()) {
       throw new FormatException(
-          'Unknown token type "${data[ResponseDataField.TOKEN_TYPE]}"');
+          'Unknown token type "${data[ResponseDataFieldConst.TOKEN_TYPE]}"');
     }
 
-    var expiresIn = data[ResponseDataField.EXPIRES_IN];
+    var expiresIn = data[ResponseDataFieldConst.EXPIRES_IN];
     if (expiresIn != null && expiresIn is! int) {
       throw new FormatException(
           'parameter "expires_in" was not an int, was "$expiresIn"');
     }
 
-    var refreshToken = data[ResponseDataField.REFRESH_TOKEN];
+    var refreshToken = data[ResponseDataFieldConst.REFRESH_TOKEN];
     if (refreshToken != null && refreshToken is! String) {
       throw new FormatException(
           'parameter "refresh_token" was not a string, was "$refreshToken"');
@@ -65,7 +65,7 @@ class Token {
         : startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
 
     return Token(
-        data[ResponseDataField.ACCESS_TOKEN], refreshToken, expiration);
+        data[ResponseDataFieldConst.ACCESS_TOKEN], refreshToken, expiration);
   }
 
   bool get isExpired =>

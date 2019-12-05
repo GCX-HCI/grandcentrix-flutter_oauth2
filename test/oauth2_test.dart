@@ -16,7 +16,7 @@ void main() {
   const _ANY_EXPIRES_IN = 123;
   const _ANOTHER_ACCESS_TOKEN = "anotherAccessToken";
   const _ANOTHER_REFRESH_TOKEN = "anotherRefreshToken";
-  const _ANY_TOKEN_TYPE = AuthorizationType.BEARER;
+  const _ANY_TOKEN_TYPE = AuthorizationTypeConst.BEARER;
   const _ANY_CONTENT_TYPE = "anyContentType";
   const _ANY_ERROR = "anyError";
   const _ANY_ERROR_DESCRIPTION = "anyErrorDescription";
@@ -33,7 +33,7 @@ void main() {
     _anyAuthorizationEndpoint = Uri.https("mock.gcx", "/mockToken");
     _anyErrorUri = Uri.https("mock.gcx", "/mockError");
     _anyHeaders = Headers();
-    _anyHeaders.add(HeaderType.CONTENT_TYPE, _ANY_CONTENT_TYPE);
+    _anyHeaders.add(HeaderTypeConst.CONTENT_TYPE, _ANY_CONTENT_TYPE);
   });
 
   group("Grant Type", () {
@@ -43,9 +43,9 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenAnswer((_) => Future.value(Response(data: {
-                ResponseDataField.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-                ResponseDataField.EXPIRES_IN: _ANY_EXPIRES_IN,
-                ResponseDataField.TOKEN_TYPE: _ANY_TOKEN_TYPE
+                ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+                ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+                ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
               }, headers: _anyHeaders)));
 
       // And the authorization method is set to "client_credentials"
@@ -67,8 +67,9 @@ void main() {
       verified.called(1);
 
       // Expect the request data to be correct
-      expect(verified.captured.first,
-          {RequestDataField.GRANT_TYPE: GrantType.CLIENT_CREDENTIALS});
+      expect(verified.captured.first, {
+        RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS
+      });
 
       // Expect the valid token to be returned
       expect(token.accessToken, _ANY_ACCESS_TOKEN);
@@ -82,10 +83,10 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenAnswer((_) => Future.value(Response(data: {
-                ResponseDataField.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-                ResponseDataField.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-                ResponseDataField.EXPIRES_IN: _ANY_EXPIRES_IN,
-                ResponseDataField.TOKEN_TYPE: _ANY_TOKEN_TYPE
+                ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+                ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+                ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+                ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
               }, headers: _anyHeaders)));
 
       // And the authorization method is set to "password"
@@ -109,9 +110,9 @@ void main() {
 
       // Expect the request data to be correct
       expect(verified.captured.first, {
-        RequestDataField.GRANT_TYPE: GrantType.PASSWORD,
-        RequestDataField.USERNAME: _anyCredentials.username,
-        RequestDataField.PASSWORD: _anyCredentials.password
+        RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.PASSWORD,
+        RequestDataFieldConst.USERNAME: _anyCredentials.username,
+        RequestDataFieldConst.PASSWORD: _anyCredentials.password
       });
 
       // Expect the valid token to be returned
@@ -129,9 +130,9 @@ void main() {
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(
               response: Response(data: {
-        ResponseDataField.ERROR: _ANY_ERROR,
-        ResponseDataField.ERROR_DESCRIPTION: _ANY_ERROR_DESCRIPTION,
-        ResponseDataField.ERROR_URI: _anyErrorUri.toString()
+        ResponseDataFieldConst.ERROR: _ANY_ERROR,
+        ResponseDataFieldConst.ERROR_DESCRIPTION: _ANY_ERROR_DESCRIPTION,
+        ResponseDataFieldConst.ERROR_URI: _anyErrorUri.toString()
       })));
 
       var config = Config(
@@ -189,7 +190,7 @@ void main() {
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(
               response: Response(data: {
-        ResponseDataField.ERROR: ["wrong error type"]
+        ResponseDataFieldConst.ERROR: ["wrong error type"]
       })));
 
       var config = Config(
@@ -210,7 +211,7 @@ void main() {
         expect(
             e.message,
             contains(
-                'required parameter "${ResponseDataField.ERROR}" was not a string, was'));
+                'required parameter "${ResponseDataFieldConst.ERROR}" was not a string, was'));
       }
     });
 
@@ -220,8 +221,9 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(
-              response: Response(
-                  data: {ResponseDataField.ERROR_LIST: "wrong error type"})));
+              response: Response(data: {
+        ResponseDataFieldConst.ERROR_LIST: "wrong error type"
+      })));
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -241,7 +243,7 @@ void main() {
         expect(
             e.message,
             contains(
-                'required parameter "${ResponseDataField.ERROR_LIST}" was not a list, was'));
+                'required parameter "${ResponseDataFieldConst.ERROR_LIST}" was not a list, was'));
       }
     });
 
@@ -252,9 +254,9 @@ void main() {
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(
               response: Response(data: {
-        ResponseDataField.ERROR: _ANY_ERROR,
-        ResponseDataField.ERROR_DESCRIPTION: ["wrong error description"],
-        ResponseDataField.ERROR_URI: _anyErrorUri.toString()
+        ResponseDataFieldConst.ERROR: _ANY_ERROR,
+        ResponseDataFieldConst.ERROR_DESCRIPTION: ["wrong error description"],
+        ResponseDataFieldConst.ERROR_URI: _anyErrorUri.toString()
       })));
 
       var config = Config(
@@ -275,7 +277,7 @@ void main() {
         expect(
             e.message,
             contains(
-                'parameter "${ResponseDataField.ERROR_DESCRIPTION}" was not a string, was'));
+                'parameter "${ResponseDataFieldConst.ERROR_DESCRIPTION}" was not a string, was'));
       }
     });
 
@@ -286,9 +288,9 @@ void main() {
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(
               response: Response(data: {
-        ResponseDataField.ERROR: _ANY_ERROR,
-        ResponseDataField.ERROR_DESCRIPTION: _ANY_ERROR_DESCRIPTION,
-        ResponseDataField.ERROR_URI: ["wrong error URI"]
+        ResponseDataFieldConst.ERROR: _ANY_ERROR,
+        ResponseDataFieldConst.ERROR_DESCRIPTION: _ANY_ERROR_DESCRIPTION,
+        ResponseDataFieldConst.ERROR_URI: ["wrong error URI"]
       })));
 
       var config = Config(
@@ -309,7 +311,7 @@ void main() {
         expect(
             e.message,
             contains(
-                'parameter "${ResponseDataField.ERROR_URI}" was not a string, was'));
+                'parameter "${ResponseDataFieldConst.ERROR_URI}" was not a string, was'));
       }
     });
 
@@ -375,9 +377,9 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenAnswer((_) => Future.value(Response(data: {
-                ResponseDataField.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-                ResponseDataField.EXPIRES_IN: _ANY_EXPIRES_IN,
-                ResponseDataField.TOKEN_TYPE: _ANY_TOKEN_TYPE
+                ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+                ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+                ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
               }, headers: _anyHeaders)));
 
       // and a token storage is put into the config
@@ -430,9 +432,9 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenAnswer((_) => Future.value(Response(data: {
-                ResponseDataField.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-                ResponseDataField.EXPIRES_IN: _ANY_EXPIRES_IN,
-                ResponseDataField.TOKEN_TYPE: _ANY_TOKEN_TYPE
+                ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+                ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+                ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
               }, headers: _anyHeaders)));
 
       // and a token storage is put into the config
@@ -459,10 +461,10 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenAnswer((_) => Future.value(Response(data: {
-                ResponseDataField.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-                ResponseDataField.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-                ResponseDataField.EXPIRES_IN: _ANY_EXPIRES_IN,
-                ResponseDataField.TOKEN_TYPE: _ANY_TOKEN_TYPE
+                ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+                ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+                ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+                ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
               }, headers: _anyHeaders)));
 
       // and a token storage is put into the config
@@ -496,10 +498,10 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenAnswer((_) => Future.value(Response(data: {
-                ResponseDataField.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-                ResponseDataField.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-                ResponseDataField.EXPIRES_IN: _ANY_EXPIRES_IN,
-                ResponseDataField.TOKEN_TYPE: _ANY_TOKEN_TYPE
+                ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+                ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+                ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+                ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
               }, headers: _anyHeaders)));
 
       // Assuming that a token storage is put into the config
@@ -530,8 +532,8 @@ void main() {
       // Expect the request data to be correct
       var data = verified.captured;
       expect(data.first, {
-        RequestDataField.GRANT_TYPE: GrantType.REFRESH_TOKEN,
-        RequestDataField.REFRESH_TOKEN: _ANOTHER_REFRESH_TOKEN
+        RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.REFRESH_TOKEN,
+        RequestDataFieldConst.REFRESH_TOKEN: _ANOTHER_REFRESH_TOKEN
       });
 
       // Expect the valid token to be returned
@@ -548,10 +550,10 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenAnswer((_) => Future.value(Response(data: {
-                ResponseDataField.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-                ResponseDataField.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-                ResponseDataField.EXPIRES_IN: _ANY_EXPIRES_IN,
-                ResponseDataField.TOKEN_TYPE: _ANY_TOKEN_TYPE
+                ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+                ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+                ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+                ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
               }, headers: _anyHeaders)));
 
       // Assuming that a token storage is put into the config
@@ -580,8 +582,9 @@ void main() {
       verified.called(1);
 
       // Expect the request data to be correct
-      expect(verified.captured.first,
-          {RequestDataField.GRANT_TYPE: GrantType.CLIENT_CREDENTIALS});
+      expect(verified.captured.first, {
+        RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS
+      });
 
       // Expect the valid token to be returned
       expect(token.accessToken, _ANY_ACCESS_TOKEN);
