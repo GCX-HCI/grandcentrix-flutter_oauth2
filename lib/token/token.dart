@@ -60,7 +60,7 @@ class Token {
           'parameter "${ResponseDataFieldConst.REFRESH_TOKEN}" was not a string, was "$refreshToken"');
     }
 
-    var expiration = expiresIn == null
+    var expiration = expiresIn == null || startTime == null
         ? null
         : startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
 

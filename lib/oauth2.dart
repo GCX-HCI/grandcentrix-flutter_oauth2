@@ -55,6 +55,10 @@ class Config {
 
 /// Validates an error response and throws an exception in the end
 _defaultErrorHandler(Response response) {
+  if (response == null || response.data is! Map) {
+    throw new FormatException('Response data cannot be read.');
+  }
+
   var data = response.data;
 
   if (!data.containsKey(ResponseDataFieldConst.ERROR) &&
