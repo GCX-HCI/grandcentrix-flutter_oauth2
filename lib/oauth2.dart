@@ -30,7 +30,7 @@ class Config {
   /// Grant type as defined by [GrantType]. Default is [GrantType.CLIENT_CREDENTIALS]
   String grantType;
 
-  /// Storage to save token into. Default is [DefaultTokenStorage]
+  /// Storage to save token into. By default tokens are not saved
   TokenStorage tokenStorage;
 
   /// Function called when an error response is received. Default is validating OAuth 2.0 fields
