@@ -97,7 +97,11 @@ class OAuth2 {
   Config _config;
   Token _latestToken;
 
-  OAuth2(this._config);
+  OAuth2(this._config) {
+    if (this._config == null) {
+      throw ArgumentError("Config cannot be null");
+    }
+  }
 
   /// Requests a token from the endpoint and returns it. Should be called before any HTTP call.
   ///

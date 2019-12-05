@@ -36,6 +36,13 @@ void main() {
     _anyHeaders.add(HeaderTypeConst.CONTENT_TYPE, _ANY_CONTENT_TYPE);
   });
 
+  test('Throws error if no config is given', () async {
+    try {
+      OAuth2(null);
+      fail("An ArgumentError is expected here");
+    } on ArgumentError catch (e) {}
+  });
+
   group("Grant Type", () {
     test('"client_credentials" returns token', () async {
       // Assuming that the client returns a valid token when calling
