@@ -99,10 +99,10 @@ class OAuth2 {
 
   OAuth2(this._config);
 
-  /// Requests a token from the endpoint and returns it.
+  /// Requests a token from the endpoint and returns it. Should be called before any HTTP call.
   ///
   /// If there is already a token available, the expiration will be checked.
-  /// If the available token is expired, a new token will be requested by using the refresh token.
+  /// If the available token is expired, a new token will be requested by using the refresh token or by using the credentials.
   Future<Token> authenticate({bool reset = false}) async {
     if (reset) {
       await _reset();
