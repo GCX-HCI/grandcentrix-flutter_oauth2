@@ -34,6 +34,37 @@ void main() {
       expect(token.expiration, isNotNull);
     });
 
+    test('returns token if response does not include a refresh token', () {
+      var response = Response(data: {
+        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+        // no refresh token
+        ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+        ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
+      }, headers: _anyHeaders);
+
+      var token = Token.fromResponse(response, DateTime.now());
+
+      // Expect the valid token to be returned
+      expect(token.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token.refreshToken, null);
+      expect(token.expiration, isNotNull);
+    });
+
+    test('returns token if response does not include "expires_in', () {
+      var response = Response(data: {
+        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+        ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+        ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
+      }, headers: _anyHeaders);
+
+      var token = Token.fromResponse(response, DateTime.now());
+
+      // Expect the valid token to be returned
+      expect(token.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token.expiration, null);
+    });
+
     test('throws FormatException if response is null', () {
       try {
         Token.fromResponse(null, DateTime.now());
