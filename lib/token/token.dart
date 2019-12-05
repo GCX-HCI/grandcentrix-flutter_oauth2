@@ -51,13 +51,13 @@ class Token {
     var expiresIn = data[ResponseDataFieldConst.EXPIRES_IN];
     if (expiresIn != null && expiresIn is! int) {
       throw new FormatException(
-          'parameter "expires_in" was not an int, was "$expiresIn"');
+          'parameter "${ResponseDataFieldConst.EXPIRES_IN}" was not an int, was "$expiresIn"');
     }
 
     var refreshToken = data[ResponseDataFieldConst.REFRESH_TOKEN];
     if (refreshToken != null && refreshToken is! String) {
       throw new FormatException(
-          'parameter "refresh_token" was not a string, was "$refreshToken"');
+          'parameter "${ResponseDataFieldConst.REFRESH_TOKEN}" was not a string, was "$refreshToken"');
     }
 
     var expiration = expiresIn == null
