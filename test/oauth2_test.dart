@@ -155,7 +155,7 @@ void main() {
       }
     });
 
-    test('with invalid format throws FormatException', () async {
+    test('without error included throws FormatException', () async {
       // Assuming that the client returns an invalid error when calling
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
@@ -176,8 +176,140 @@ void main() {
         await handler.authenticate();
         fail("An FormatException is expected here!");
       } on FormatException catch (e) {
-        // and to throw an exception
-        expect(e.message, isNotNull);
+        // and to throw an exception with the correct message
+        expect(e.message,
+            'did not contain required parameter "error" or "errors"');
+      }
+    });
+
+    test('with wrong error type throws FormatException', () async {
+      // Assuming that the client returns an invalid error when calling
+      // the authorization endpoint
+      when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: anyNamed('data'), options: anyNamed('options')))
+          .thenThrow(DioError(
+              response: Response(data: {
+        ResponseDataField.ERROR: ["wrong error type"]
+      })));
+
+      var config = Config(
+          authorizationEndpoint: _anyAuthorizationEndpoint,
+          grantType: GrantType.PASSWORD,
+          clientCredentials: _anyCredentials,
+          userCredentials: _anyCredentials,
+          httpClient: _mockClient);
+
+      // If the OAuth2 authentication is called
+      OAuth2 handler = OAuth2(config);
+      try {
+        // Expect the authentication to fail
+        await handler.authenticate();
+        fail("An FormatException is expected here!");
+      } on FormatException catch (e) {
+        // and to throw an exception with the correct message
+        expect(
+            e.message,
+            contains(
+                'required parameter "${ResponseDataField.ERROR}" was not a string, was'));
+      }
+    });
+
+    test('with wrong error list type throws FormatException', () async {
+      // Assuming that the client returns an invalid error when calling
+      // the authorization endpoint
+      when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: anyNamed('data'), options: anyNamed('options')))
+          .thenThrow(DioError(
+              response: Response(
+                  data: {ResponseDataField.ERROR_LIST: "wrong error type"})));
+
+      var config = Config(
+          authorizationEndpoint: _anyAuthorizationEndpoint,
+          grantType: GrantType.PASSWORD,
+          clientCredentials: _anyCredentials,
+          userCredentials: _anyCredentials,
+          httpClient: _mockClient);
+
+      // If the OAuth2 authentication is called
+      OAuth2 handler = OAuth2(config);
+      try {
+        // Expect the authentication to fail
+        await handler.authenticate();
+        fail("An FormatException is expected here!");
+      } on FormatException catch (e) {
+        // and to throw an exception with the correct message
+        expect(
+            e.message,
+            contains(
+                'required parameter "${ResponseDataField.ERROR_LIST}" was not a list, was'));
+      }
+    });
+
+    test('with wrong error description type throws FormatException', () async {
+      // Assuming that the client returns an invalid error when calling
+      // the authorization endpoint
+      when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: anyNamed('data'), options: anyNamed('options')))
+          .thenThrow(DioError(
+              response: Response(data: {
+        ResponseDataField.ERROR: _ANY_ERROR,
+        ResponseDataField.ERROR_DESCRIPTION: ["wrong error description"],
+        ResponseDataField.ERROR_URI: _anyErrorUri.toString()
+      })));
+
+      var config = Config(
+          authorizationEndpoint: _anyAuthorizationEndpoint,
+          grantType: GrantType.PASSWORD,
+          clientCredentials: _anyCredentials,
+          userCredentials: _anyCredentials,
+          httpClient: _mockClient);
+
+      // If the OAuth2 authentication is called
+      OAuth2 handler = OAuth2(config);
+      try {
+        // Expect the authentication to fail
+        await handler.authenticate();
+        fail("An FormatException is expected here!");
+      } on FormatException catch (e) {
+        // and to throw an exception with the correct message
+        expect(
+            e.message,
+            contains(
+                'parameter "${ResponseDataField.ERROR_DESCRIPTION}" was not a string, was'));
+      }
+    });
+
+    test('with wrong error uri type throws FormatException', () async {
+      // Assuming that the client returns an invalid error when calling
+      // the authorization endpoint
+      when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: anyNamed('data'), options: anyNamed('options')))
+          .thenThrow(DioError(
+              response: Response(data: {
+        ResponseDataField.ERROR: _ANY_ERROR,
+        ResponseDataField.ERROR_DESCRIPTION: _ANY_ERROR_DESCRIPTION,
+        ResponseDataField.ERROR_URI: ["wrong error URI"]
+      })));
+
+      var config = Config(
+          authorizationEndpoint: _anyAuthorizationEndpoint,
+          grantType: GrantType.PASSWORD,
+          clientCredentials: _anyCredentials,
+          userCredentials: _anyCredentials,
+          httpClient: _mockClient);
+
+      // If the OAuth2 authentication is called
+      OAuth2 handler = OAuth2(config);
+      try {
+        // Expect the authentication to fail
+        await handler.authenticate();
+        fail("An FormatException is expected here!");
+      } on FormatException catch (e) {
+        // and to throw an exception with the correct message
+        expect(
+            e.message,
+            contains(
+                'parameter "${ResponseDataField.ERROR_URI}" was not a string, was'));
       }
     });
 

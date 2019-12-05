@@ -60,15 +60,16 @@ _defaultErrorHandler(Response response) {
   if (!data.containsKey(ResponseDataField.ERROR) &&
       !data.containsKey(ResponseDataField.ERROR_LIST)) {
     throw new FormatException(
-        'did not contain required parameter "error" or "errors"');
+        'did not contain required parameter "${ResponseDataField.ERROR}" or "${ResponseDataField.ERROR_LIST}"');
   } else if (data.containsKey(ResponseDataField.ERROR) &&
       data[ResponseDataField.ERROR] is! String) {
     throw new FormatException(
-        'required parameter "error" was not a string, was '
+        'required parameter "${ResponseDataField.ERROR}" was not a string, was '
         '"${data[ResponseDataField.ERROR]}"');
   } else if (data.containsKey(ResponseDataField.ERROR_LIST) &&
       data[ResponseDataField.ERROR_LIST] is! List) {
-    throw new FormatException('required parameter "errors" was not a map, was '
+    throw new FormatException(
+        'required parameter "${ResponseDataField.ERROR_LIST}" was not a list, was '
         '"${data[ResponseDataField.ERROR_LIST]}"');
   }
 
