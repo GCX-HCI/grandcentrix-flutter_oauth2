@@ -56,23 +56,23 @@ class Config {
 /// Validates an error response and throws an exception in the end
 _defaultErrorHandler(Response response) {
   if (response == null || response.data is! Map) {
-    throw new FormatException('Response data cannot be read.');
+    throw FormatException('Response data cannot be read.');
   }
 
   var data = response.data;
 
   if (!data.containsKey(ResponseDataFieldConst.ERROR) &&
       !data.containsKey(ResponseDataFieldConst.ERROR_LIST)) {
-    throw new FormatException(
+    throw FormatException(
         'did not contain required parameter "${ResponseDataFieldConst.ERROR}" or "${ResponseDataFieldConst.ERROR_LIST}"');
   } else if (data.containsKey(ResponseDataFieldConst.ERROR) &&
       data[ResponseDataFieldConst.ERROR] is! String) {
-    throw new FormatException(
+    throw FormatException(
         'required parameter "${ResponseDataFieldConst.ERROR}" was not a string, was '
         '"${data[ResponseDataFieldConst.ERROR]}"');
   } else if (data.containsKey(ResponseDataFieldConst.ERROR_LIST) &&
       data[ResponseDataFieldConst.ERROR_LIST] is! List) {
-    throw new FormatException(
+    throw FormatException(
         'required parameter "${ResponseDataFieldConst.ERROR_LIST}" was not a list, was '
         '"${data[ResponseDataFieldConst.ERROR_LIST]}"');
   }
@@ -84,15 +84,14 @@ _defaultErrorHandler(Response response) {
     var value = data[name];
 
     if (value != null && value is! String) {
-      throw new FormatException(
-          'parameter "$name" was not a string, was "$value"');
+      throw FormatException('parameter "$name" was not a string, was "$value"');
     }
   }
 
   var error = data[ResponseDataFieldConst.ERROR];
   var description = data[ResponseDataFieldConst.ERROR_DESCRIPTION];
   var uri = Uri.parse(data[ResponseDataFieldConst.ERROR_URI]);
-  throw new AuthorizationException(error, description, uri);
+  throw AuthorizationException(error, description, uri);
 }
 
 /// Handles the OAuth 2.0 flow.
@@ -179,7 +178,7 @@ class OAuth2 {
 
   /// General token request used to get and refresh token
   Future<Token> _requestToken(var body) async {
-    var startTime = new DateTime.now();
+    var startTime = DateTime.now();
 
     Options options = Options(contentType: Headers.formUrlEncodedContentType);
     options.headers[HeaderTypeConst.AUTHORIZATION] = basicAuthHeader(
@@ -199,7 +198,7 @@ class OAuth2 {
       if (e.response != null) {
         this._config.errorHandler(e.response);
       } else {
-        throw new Exception("Error when trying to send request");
+        throw Exception("Error when trying to send request");
       }
     }
 

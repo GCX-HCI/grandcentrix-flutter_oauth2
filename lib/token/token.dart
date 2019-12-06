@@ -5,7 +5,7 @@ import 'package:flutter_oauth2/helper/const.dart';
 ///
 /// This allows credential expiration checks to remain valid for a reasonable
 /// amount of time.
-const _expirationGrace = const Duration(seconds: 10);
+const _expirationGrace = Duration(seconds: 10);
 
 /// OAuth 2.0 token information including access token, refresh token and expiration date
 class Token {
@@ -18,14 +18,14 @@ class Token {
   /// Validates the response and creates a new [Token] object in the end
   factory Token.fromResponse(Response response, DateTime startTime) {
     if (response == null || response.data is! Map) {
-      throw new FormatException('Response data cannot be read.');
+      throw FormatException('Response data cannot be read.');
     }
 
     var data = response.data;
 
     var contentTypeString = response.headers[HeaderTypeConst.CONTENT_TYPE];
     if (contentTypeString == null) {
-      throw new FormatException('Missing Content-Type string.');
+      throw FormatException('Missing Content-Type string.');
     }
 
     for (var requiredParameter in [
@@ -33,10 +33,10 @@ class Token {
       ResponseDataFieldConst.TOKEN_TYPE
     ]) {
       if (!data.containsKey(requiredParameter)) {
-        throw new FormatException(
+        throw FormatException(
             'did not contain required parameter "$requiredParameter"');
       } else if (data[requiredParameter] is! String) {
-        throw new FormatException(
+        throw FormatException(
             'required parameter "$requiredParameter" was not a string, was '
             '"${data[requiredParameter]}"');
       }
@@ -44,25 +44,25 @@ class Token {
 
     if (data[ResponseDataFieldConst.TOKEN_TYPE].toLowerCase() !=
         AuthorizationTypeConst.BEARER.toLowerCase()) {
-      throw new FormatException(
+      throw FormatException(
           'Unknown token type "${data[ResponseDataFieldConst.TOKEN_TYPE]}"');
     }
 
     var expiresIn = data[ResponseDataFieldConst.EXPIRES_IN];
     if (expiresIn != null && expiresIn is! int) {
-      throw new FormatException(
+      throw FormatException(
           'parameter "${ResponseDataFieldConst.EXPIRES_IN}" was not an int, was "$expiresIn"');
     }
 
     var refreshToken = data[ResponseDataFieldConst.REFRESH_TOKEN];
     if (refreshToken != null && refreshToken is! String) {
-      throw new FormatException(
+      throw FormatException(
           'parameter "${ResponseDataFieldConst.REFRESH_TOKEN}" was not a string, was "$refreshToken"');
     }
 
     var expiration = expiresIn == null || startTime == null
         ? null
-        : startTime.add(new Duration(seconds: expiresIn) - _expirationGrace);
+        : startTime.add(Duration(seconds: expiresIn) - _expirationGrace);
 
     return Token(
         data[ResponseDataFieldConst.ACCESS_TOKEN], refreshToken, expiration);
