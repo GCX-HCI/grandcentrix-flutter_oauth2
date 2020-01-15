@@ -59,7 +59,7 @@ _defaultErrorHandler(Response response) {
     throw FormatException('Response data cannot be read.');
   }
 
-  Map<String, dynamic> data = response.data;
+  Map data = response.data;
 
   if (!data.containsKey(ResponseDataFieldConst.ERROR) &&
       !data.containsKey(ResponseDataFieldConst.ERROR_LIST)) {
