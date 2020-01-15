@@ -20,6 +20,10 @@ void main() {
   const _ANY_CONTENT_TYPE = "anyContentType";
   const _ANY_ERROR = "anyError";
   const _ANY_ERROR_DESCRIPTION = "anyErrorDescription";
+  const _ANY_ERROR_CODE = 'anyErrorCode';
+  const _ANY_ERROR_LIST = [
+    {ResponseDataFieldConst.ERROR_CODE: _ANY_ERROR_CODE}
+  ];
 
   Dio _mockClient;
   Credentials _anyCredentials;
@@ -130,7 +134,7 @@ void main() {
   });
 
   group("Error response", () {
-    test('with correct format throws AuthorizationException', () async {
+    test('with correct error format throws AuthorizationException', () async {
       // Assuming that the client returns an error when calling
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
@@ -160,6 +164,38 @@ void main() {
         expect(e.error, _ANY_ERROR);
         expect(e.description, _ANY_ERROR_DESCRIPTION);
         expect(e.uri, _anyErrorUri);
+      }
+    });
+
+    test('with correct error list format throws AuthorizationException',
+        () async {
+      // Assuming that the client returns an error when calling
+      // the authorization endpoint
+      when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
+              data: anyNamed('data'), options: anyNamed('options')))
+          .thenThrow(DioError(
+              response: Response(data: {
+        ResponseDataFieldConst.ERROR_LIST: _ANY_ERROR_LIST,
+      })));
+
+      var config = Config(
+          authorizationEndpoint: _anyAuthorizationEndpoint,
+          grantType: GrantType.PASSWORD,
+          clientCredentials: _anyCredentials,
+          userCredentials: _anyCredentials,
+          httpClient: _mockClient);
+
+      // If the OAuth2 authentication is called
+      OAuth2 handler = OAuth2(config);
+      try {
+        // Expect the authentication to fail
+        await handler.authenticate();
+        fail("An AuthorizationException is expected here!");
+      } on AuthorizationException catch (e) {
+        // and to throw an exception with an error description
+        expect(e.error, _ANY_ERROR_CODE);
+        expect(e.description, null);
+        expect(e.uri, null);
       }
     });
 

@@ -59,7 +59,7 @@ _defaultErrorHandler(Response response) {
     throw FormatException('Response data cannot be read.');
   }
 
-  var data = response.data;
+  Map data = response.data;
 
   if (!data.containsKey(ResponseDataFieldConst.ERROR) &&
       !data.containsKey(ResponseDataFieldConst.ERROR_LIST)) {
@@ -88,10 +88,23 @@ _defaultErrorHandler(Response response) {
     }
   }
 
-  var error = data[ResponseDataFieldConst.ERROR];
-  var description = data[ResponseDataFieldConst.ERROR_DESCRIPTION];
-  var uri = Uri.parse(data[ResponseDataFieldConst.ERROR_URI]);
-  throw AuthorizationException(error, description, uri);
+  // not standard OAuth
+  if (data.containsKey(ResponseDataFieldConst.ERROR_LIST)) {
+    throw AuthorizationException(
+        data[ResponseDataFieldConst.ERROR_LIST][0]
+            [ResponseDataFieldConst.ERROR_CODE],
+        null,
+        null);
+  }
+
+  throw AuthorizationException(
+      data[ResponseDataFieldConst.ERROR],
+      data.containsKey(ResponseDataFieldConst.ERROR_DESCRIPTION)
+          ? data[ResponseDataFieldConst.ERROR_DESCRIPTION]
+          : null,
+      data.containsKey(ResponseDataFieldConst.ERROR_URI)
+          ? Uri.parse(data[ResponseDataFieldConst.ERROR_URI])
+          : null);
 }
 
 /// Handles the OAuth 2.0 flow.

@@ -30,6 +30,7 @@ class ResponseDataFieldConst {
   static const ERROR_LIST = 'errors';
   static const ERROR_DESCRIPTION = 'error_description';
   static const ERROR_URI = 'error_uri';
+  static const ERROR_CODE = 'code';
 }
 
 /// Fields which are possibly included in a OAuth 2.0 request
