@@ -8,9 +8,8 @@ class AuthorizationException implements Exception {
   AuthorizationException(this.error, this.description, this.uri);
 
   @override
-  String toString() {
-    return "$error: $description (${uri.toString()})";
-  }
+  String toString() =>
+      "${this.runtimeType.toString()}($error: $description (${uri.toString()}))";
 }
 
 class ExpirationException implements Exception {
