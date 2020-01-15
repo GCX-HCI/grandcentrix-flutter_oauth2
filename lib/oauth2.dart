@@ -91,7 +91,10 @@ _defaultErrorHandler(Response response) {
   // not standard OAuth
   if (data.containsKey(ResponseDataFieldConst.ERROR_LIST)) {
     throw AuthorizationException(
-        data[ResponseDataFieldConst.ERROR_LIST][0], null, null);
+        data[ResponseDataFieldConst.ERROR_LIST][0]
+            [ResponseDataFieldConst.ERROR_CODE],
+        null,
+        null);
   }
 
   throw AuthorizationException(
