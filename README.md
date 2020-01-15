@@ -10,7 +10,7 @@ dependencies:
   flutter_oauth2:
       git:
         url: git@github.gcxi.de:grandcentrix/flutter_oauth2.git
-        ref: master
+        ref: v0.1.0
 ```
 
 ### Simple to use
