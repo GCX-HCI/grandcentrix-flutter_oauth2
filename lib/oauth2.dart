@@ -42,7 +42,7 @@ class Config {
   Config(
       {@required this.authorizationEndpoint,
       this.grantType = GrantType.CLIENT_CREDENTIALS,
-      @required this.clientCredentials,
+      this.clientCredentials,
       this.userCredentials,
       Map<String, dynamic> additionalHeaders,
       this.tokenStorage,
@@ -199,8 +199,11 @@ class OAuth2 {
     var startTime = DateTime.now();
 
     Options options = Options(contentType: Headers.formUrlEncodedContentType);
-    options.headers[HeaderTypeConst.AUTHORIZATION] = basicAuthHeader(
-        _config.clientCredentials.username, _config.clientCredentials.password);
+    if (_config.clientCredentials != null) {
+      options.headers[HeaderTypeConst.AUTHORIZATION] = basicAuthHeader(
+          _config.clientCredentials.username,
+          _config.clientCredentials.password);
+    }
 
     if (_config.additionalHeaders.isNotEmpty) {
       options.headers.addAll(_config.additionalHeaders);
