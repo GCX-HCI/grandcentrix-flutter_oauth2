@@ -42,7 +42,7 @@ class Config {
   Config(
       {@required this.authorizationEndpoint,
       this.grantType = GrantType.CLIENT_CREDENTIALS,
-      @required this.clientCredentials,
+      this.clientCredentials,
       this.userCredentials,
       Map<String, dynamic> additionalHeaders,
       this.tokenStorage,
@@ -168,6 +168,11 @@ class OAuth2 {
 
   /// Gets a new token considering the configured grant type
   Future<Token> _getToken() async {
+    if (_config.grantType == GrantType.REFRESH_TOKEN) {
+      throw StateError(
+          'Set GrantType to REFRESH_TOKEN, but cannot find token in TokenStorage');
+    }
+
     var body = _config.grantType == GrantType.CLIENT_CREDENTIALS
         ? {RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS}
         : {
@@ -194,8 +199,11 @@ class OAuth2 {
     var startTime = DateTime.now();
 
     Options options = Options(contentType: Headers.formUrlEncodedContentType);
-    options.headers[HeaderTypeConst.AUTHORIZATION] = basicAuthHeader(
-        _config.clientCredentials.username, _config.clientCredentials.password);
+    if (_config.clientCredentials != null) {
+      options.headers[HeaderTypeConst.AUTHORIZATION] = basicAuthHeader(
+          _config.clientCredentials.username,
+          _config.clientCredentials.password);
+    }
 
     if (_config.additionalHeaders.isNotEmpty) {
       options.headers.addAll(_config.additionalHeaders);
