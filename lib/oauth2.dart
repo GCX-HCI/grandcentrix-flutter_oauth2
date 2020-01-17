@@ -168,6 +168,11 @@ class OAuth2 {
 
   /// Gets a new token considering the configured grant type
   Future<Token> _getToken() async {
+    if (_config.grantType == GrantType.REFRESH_TOKEN) {
+      throw StateError(
+          'Set GrantType to REFRESH_TOKEN, but cannot find token in TokenStorage');
+    }
+
     var body = _config.grantType == GrantType.CLIENT_CREDENTIALS
         ? {RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS}
         : {
