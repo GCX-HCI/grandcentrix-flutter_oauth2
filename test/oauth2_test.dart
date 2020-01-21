@@ -48,6 +48,59 @@ void main() {
   });
 
   group("Grant Type", () {
+    test('"refresh_token" returns token if token is persistent', () async {
+      // Assuming that a token storage is put into the config
+      var tokenStorage = MockTokenStorage();
+      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
+          _ANOTHER_ACCESS_TOKEN,
+          _ANOTHER_REFRESH_TOKEN,
+          DateTime.now().add(Duration(minutes: 10)))));
+
+      // And the authorization method is set to "refresh_token"
+      var config = Config(
+          authorizationEndpoint: _anyAuthorizationEndpoint,
+          grantType: GrantType.REFRESH_TOKEN,
+          clientCredentials: _anyCredentials,
+          httpClient: _mockClient,
+          tokenStorage: tokenStorage);
+
+      // If the OAuth2 authentication is called
+      OAuth2 handler = OAuth2(config);
+      var token = await handler.authenticate();
+
+      // Expect the read method of the token storage to be called
+      verify(tokenStorage.read());
+
+      // Expect the valid token to be returned
+      expect(token.accessToken, _ANOTHER_ACCESS_TOKEN);
+      expect(token.refreshToken, _ANOTHER_REFRESH_TOKEN);
+      expect(token.expiration, isNotNull);
+    });
+
+    test('"refresh_token" throws error if token is not persistent', () async {
+      // Assuming that a token storage is put into the config
+      // which does not include a token
+      var tokenStorage = MockTokenStorage();
+      when(tokenStorage.read()).thenAnswer((_) => null);
+
+      // And the authorization method is set to "refresh_token"
+      var config = Config(
+          authorizationEndpoint: _anyAuthorizationEndpoint,
+          grantType: GrantType.REFRESH_TOKEN,
+          clientCredentials: _anyCredentials,
+          httpClient: _mockClient,
+          tokenStorage: tokenStorage);
+
+      // If the OAuth2 authentication is called
+      OAuth2 handler = OAuth2(config);
+      try {
+        await handler.authenticate();
+        fail('');
+      } on StateError catch (_) {
+        // Expect an exception to be thrown
+      }
+    });
+
     test('"client_credentials" returns token', () async {
       // Assuming that the client returns a valid token when calling
       // the authorization endpoint
