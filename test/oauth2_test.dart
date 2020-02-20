@@ -1,8 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_oauth2/helper/const.dart';
-import 'package:flutter_oauth2/helper/exception.dart';
-import 'package:flutter_oauth2/oauth2.dart';
-import 'package:flutter_oauth2/token/token.dart';
+import 'package:flutter_oauth2/flutter_oauth2.dart';
 import 'package:mockito/mockito.dart';
 import "package:test/test.dart";
 

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_oauth2/helper/const.dart';
+import 'package:flutter_oauth2/src/helper/const.dart';
 
 String basicAuthHeader(String identifier, String secret) =>
     '${AuthorizationTypeConst.BASIC} ' +

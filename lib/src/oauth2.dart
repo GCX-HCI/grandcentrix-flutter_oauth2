@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_oauth2/helper/const.dart';
-import 'package:flutter_oauth2/helper/exception.dart';
-import 'package:flutter_oauth2/helper/utils.dart';
-import 'package:flutter_oauth2/token/token.dart';
+import 'package:flutter_oauth2/src/helper/const.dart';
+import 'package:flutter_oauth2/src/helper/exception.dart';
+import 'package:flutter_oauth2/src/helper/utils.dart';
+import 'package:flutter_oauth2/src/token/token.dart';
 import 'package:meta/meta.dart';
 
 /// Credentials of any type e.g. client and user
