@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_oauth2/helper/const.dart';
+import 'package:flutter_oauth2/src/helper/const.dart';
 
 /// The amount of time to add as a "grace period" for credential expiration.
 ///
