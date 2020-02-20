@@ -10,15 +10,13 @@ dependencies:
   flutter_oauth2:
       git:
         url: git@github.gcxi.de:grandcentrix/flutter_oauth2.git
-        ref: v0.1.0
+        ref: v0.1.1
 ```
 
 ### Simple to use
 
 ```dart
-import 'package:flutter_oauth2/helper/const.dart';
-import 'package:flutter_oauth2/token/token.dart';
-import 'package:flutter_oauth2/oauth2.dart';
+import 'package:flutter_oauth2/flutter_oauth2.dart';
 
 OAuth2 handler = OAuth2(Config(
         authorizationEndpoint: endpointUri,
