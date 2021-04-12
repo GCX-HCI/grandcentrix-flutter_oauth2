@@ -9,7 +9,7 @@ OAuth 2.0 library for Flutter / Dart
 dependencies:
   flutter_oauth2:
       git:
-        url: git@github.gcxi.de:grandcentrix/flutter_oauth2.git
+        url: git@github.com:GCX-HCI/grandcentrix-flutter_oauth2.git
         ref: v0.1.1
 ```
 
