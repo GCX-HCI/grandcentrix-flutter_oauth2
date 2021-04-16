@@ -1,9 +1,9 @@
 import 'package:flutter_oauth2/src/token/token.dart';
 
 class AuthorizationException implements Exception {
-  final String error;
-  final String description;
-  final Uri uri;
+  final String? error;
+  final String? description;
+  final Uri? uri;
 
   AuthorizationException(this.error, this.description, this.uri);
 

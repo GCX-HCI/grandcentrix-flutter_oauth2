@@ -1,12 +1,14 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_oauth2/flutter_oauth2.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import "package:test/test.dart";
 
-class MockClient extends Mock implements Dio {}
+import 'oauth2_test.mocks.dart';
 
-class MockTokenStorage extends Mock implements TokenStorage {}
-
+@GenerateMocks([Dio, TokenStorage])
 void main() {
   const _ANY_ACCESS_TOKEN = "anyAccessToken";
   const _ANY_REFRESH_TOKEN = "anyRefreshToken";
@@ -22,36 +24,34 @@ void main() {
     {ResponseDataFieldConst.ERROR_CODE: _ANY_ERROR_CODE}
   ];
 
-  Dio _mockClient;
-  Credentials _anyCredentials;
-  Uri _anyAuthorizationEndpoint;
-  Headers _anyHeaders;
-  Uri _anyErrorUri;
+  late Dio _mockClient;
+  late Credentials _anyCredentials;
+  late Uri _anyAuthorizationEndpoint;
+  late Headers _anyHeaders;
+  late Uri _anyErrorUri;
+  late TokenStorage _mockTokenStorage;
 
   setUp(() {
-    _mockClient = MockClient();
+    _mockClient = MockDio();
     _anyCredentials = Credentials("any", "any");
     _anyAuthorizationEndpoint = Uri.https("mock.gcx", "/mockToken");
     _anyErrorUri = Uri.https("mock.gcx", "/mockError");
     _anyHeaders = Headers();
     _anyHeaders.add(HeaderTypeConst.CONTENT_TYPE, _ANY_CONTENT_TYPE);
-  });
-
-  test('Throws error if no config is given', () async {
-    try {
-      OAuth2(null);
-      fail("An ArgumentError is expected here");
-    } on ArgumentError catch (e) {}
+    _mockTokenStorage = MockTokenStorage();
+    when(_mockTokenStorage.clear()).thenAnswer((_) async => null);
+    when(_mockTokenStorage.read()).thenAnswer((_) async => null);
+    when(_mockTokenStorage.write(any)).thenAnswer((_) async => null);
   });
 
   group("Grant Type", () {
     test('"refresh_token" returns token if token is persistent', () async {
       // Assuming that a token storage is put into the config
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
-          _ANOTHER_ACCESS_TOKEN,
-          _ANOTHER_REFRESH_TOKEN,
-          DateTime.now().add(Duration(minutes: 10)))));
+      when(_mockTokenStorage.read()).thenAnswer((_) => Future.value(Token(
+            _ANOTHER_ACCESS_TOKEN,
+            _ANOTHER_REFRESH_TOKEN,
+            DateTime.now().add(Duration(minutes: 10)),
+          )));
 
       // And the authorization method is set to "refresh_token"
       var config = Config(
@@ -59,26 +59,25 @@ void main() {
           grantType: GrantType.REFRESH_TOKEN,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
       var token = await handler.authenticate();
 
       // Expect the read method of the token storage to be called
-      verify(tokenStorage.read());
+      verify(_mockTokenStorage.read());
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANOTHER_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANOTHER_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANOTHER_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANOTHER_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
 
     test('"refresh_token" throws error if token is not persistent', () async {
       // Assuming that a token storage is put into the config
       // which does not include a token
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read()).thenAnswer((_) => null);
+      when(_mockTokenStorage.read()).thenAnswer(((_) async => null));
 
       // And the authorization method is set to "refresh_token"
       var config = Config(
@@ -86,7 +85,7 @@ void main() {
           grantType: GrantType.REFRESH_TOKEN,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
@@ -103,11 +102,14 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenAnswer((_) => Future.value(Response(data: {
+          .thenAnswer((_) => Future.value(Response(
+              requestOptions: RequestOptions(path: ""),
+              data: {
                 ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
                 ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
                 ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-              }, headers: _anyHeaders)));
+              },
+              headers: _anyHeaders)));
 
       // And the authorization method is set to "client_credentials"
       var config = Config(
@@ -133,9 +135,9 @@ void main() {
       });
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANY_ACCESS_TOKEN);
-      expect(token.refreshToken, null);
-      expect(token.expiration, isNot(null));
+      expect(token?.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token?.refreshToken, null);
+      expect(token?.expiration, isNot(null));
     });
 
     test('"password" returns token', () async {
@@ -143,12 +145,15 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenAnswer((_) => Future.value(Response(data: {
+          .thenAnswer((_) => Future.value(Response(
+              requestOptions: RequestOptions(path: ""),
+              data: {
                 ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
                 ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
                 ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
                 ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-              }, headers: _anyHeaders)));
+              },
+              headers: _anyHeaders)));
 
       // And the authorization method is set to "password"
       var config = Config(
@@ -177,9 +182,9 @@ void main() {
       });
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANY_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
   });
 
@@ -189,12 +194,19 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenThrow(DioError(
-              response: Response(data: {
-        ResponseDataFieldConst.ERROR: _ANY_ERROR,
-        ResponseDataFieldConst.ERROR_DESCRIPTION: _ANY_ERROR_DESCRIPTION,
-        ResponseDataFieldConst.ERROR_URI: _anyErrorUri.toString()
-      })));
+          .thenThrow(
+        DioError(
+          requestOptions: RequestOptions(path: ""),
+          response: Response(
+            requestOptions: RequestOptions(path: ""),
+            data: {
+              ResponseDataFieldConst.ERROR: _ANY_ERROR,
+              ResponseDataFieldConst.ERROR_DESCRIPTION: _ANY_ERROR_DESCRIPTION,
+              ResponseDataFieldConst.ERROR_URI: _anyErrorUri.toString()
+            },
+          ),
+        ),
+      );
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -224,9 +236,13 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(
-              response: Response(data: {
-        ResponseDataFieldConst.ERROR_LIST: _ANY_ERROR_LIST,
-      })));
+              requestOptions: RequestOptions(path: ""),
+              response: Response(
+                requestOptions: RequestOptions(path: ""),
+                data: {
+                  ResponseDataFieldConst.ERROR_LIST: _ANY_ERROR_LIST,
+                },
+              )));
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -254,7 +270,13 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenThrow(DioError(response: Response(data: {})));
+          .thenThrow(
+        DioError(
+          requestOptions: RequestOptions(path: ""),
+          response:
+              Response(requestOptions: RequestOptions(path: ""), data: {}),
+        ),
+      );
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -282,9 +304,13 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(
-              response: Response(data: {
-        ResponseDataFieldConst.ERROR: ["wrong error type"]
-      })));
+              requestOptions: RequestOptions(path: ""),
+              response: Response(
+                requestOptions: RequestOptions(path: ""),
+                data: {
+                  ResponseDataFieldConst.ERROR: ["wrong error type"]
+                },
+              )));
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -314,9 +340,12 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(
-              response: Response(data: {
-        ResponseDataFieldConst.ERROR_LIST: "wrong error type"
-      })));
+              requestOptions: RequestOptions(path: ""),
+              response: Response(
+                  requestOptions: RequestOptions(path: ""),
+                  data: {
+                    ResponseDataFieldConst.ERROR_LIST: "wrong error type"
+                  })));
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -346,11 +375,15 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(
-              response: Response(data: {
-        ResponseDataFieldConst.ERROR: _ANY_ERROR,
-        ResponseDataFieldConst.ERROR_DESCRIPTION: ["wrong error description"],
-        ResponseDataFieldConst.ERROR_URI: _anyErrorUri.toString()
-      })));
+              requestOptions: RequestOptions(path: ""),
+              response:
+                  Response(requestOptions: RequestOptions(path: ""), data: {
+                ResponseDataFieldConst.ERROR: _ANY_ERROR,
+                ResponseDataFieldConst.ERROR_DESCRIPTION: [
+                  "wrong error description"
+                ],
+                ResponseDataFieldConst.ERROR_URI: _anyErrorUri.toString()
+              })));
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -380,11 +413,16 @@ void main() {
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(
-              response: Response(data: {
-        ResponseDataFieldConst.ERROR: _ANY_ERROR,
-        ResponseDataFieldConst.ERROR_DESCRIPTION: _ANY_ERROR_DESCRIPTION,
-        ResponseDataFieldConst.ERROR_URI: ["wrong error URI"]
-      })));
+              requestOptions: RequestOptions(path: ""),
+              response: Response(
+                requestOptions: RequestOptions(path: ""),
+                data: {
+                  ResponseDataFieldConst.ERROR: _ANY_ERROR,
+                  ResponseDataFieldConst.ERROR_DESCRIPTION:
+                      _ANY_ERROR_DESCRIPTION,
+                  ResponseDataFieldConst.ERROR_URI: ["wrong error URI"]
+                },
+              )));
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -413,7 +451,7 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenThrow(DioError());
+          .thenThrow(DioError(requestOptions: RequestOptions(path: "")));
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -440,8 +478,10 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenAnswer(
-              (_) => Future.value(Response(data: {}, headers: _anyHeaders)));
+          .thenAnswer((_) => Future.value(Response(
+              requestOptions: RequestOptions(path: ""),
+              data: {},
+              headers: _anyHeaders)));
 
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
@@ -469,33 +509,34 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenAnswer((_) => Future.value(Response(data: {
+          .thenAnswer((_) => Future.value(Response(
+              requestOptions: RequestOptions(path: ""),
+              data: {
                 ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
                 ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
                 ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-              }, headers: _anyHeaders)));
+              },
+              headers: _anyHeaders)));
 
       // and a token storage is put into the config
-      var tokenStorage = MockTokenStorage();
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called with the reset flag
       OAuth2 handler = OAuth2(config);
       await handler.authenticate(reset: true);
 
       // Expect the clear method of the token storage to be called
-      verify(tokenStorage.clear());
+      verify(_mockTokenStorage.clear());
     });
 
     test('is used to read token if no token is in memory', () async {
       // Assuming that a token storage is put into the config
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
+      when(_mockTokenStorage.read()).thenAnswer((_) => Future.value(Token(
           _ANOTHER_ACCESS_TOKEN,
           _ANOTHER_REFRESH_TOKEN,
           DateTime.now().add(Duration(minutes: 10)))));
@@ -504,19 +545,19 @@ void main() {
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
       var token = await handler.authenticate();
 
       // Expect the read method of the token storage to be called
-      verify(tokenStorage.read());
+      verify(_mockTokenStorage.read());
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANOTHER_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANOTHER_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANOTHER_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANOTHER_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
 
     test('is used to write token if new token is received', () async {
@@ -524,20 +565,22 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenAnswer((_) => Future.value(Response(data: {
+          .thenAnswer((_) => Future.value(Response(
+              requestOptions: RequestOptions(path: ""),
+              data: {
                 ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
                 ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
                 ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-              }, headers: _anyHeaders)));
+              },
+              headers: _anyHeaders)));
 
       // and a token storage is put into the config
-      var tokenStorage = MockTokenStorage();
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
@@ -545,7 +588,7 @@ void main() {
 
       // Expect the write method of the token storage to be called
       // after a new token is received
-      verify(tokenStorage.write(argThat(isNotNull)));
+      verify(_mockTokenStorage.write(argThat(isNotNull)));
     });
 
     test('is allowed to return empty value', () async {
@@ -553,34 +596,35 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenAnswer((_) => Future.value(Response(data: {
+          .thenAnswer((_) => Future.value(Response(
+              requestOptions: RequestOptions(path: ""),
+              data: {
                 ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
                 ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
                 ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
                 ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-              }, headers: _anyHeaders)));
+              },
+              headers: _anyHeaders)));
 
       // and a token storage is put into the config
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read()).thenAnswer((_) => null);
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
       var token = await handler.authenticate();
 
       // Expect the read method of the token storage to be called
-      verify(tokenStorage.read());
+      verify(_mockTokenStorage.read());
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANY_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
   });
 
@@ -590,17 +634,19 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenAnswer((_) => Future.value(Response(data: {
+          .thenAnswer((_) => Future.value(Response(
+              requestOptions: RequestOptions(path: ""),
+              data: {
                 ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
                 ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
                 ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
                 ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-              }, headers: _anyHeaders)));
+              },
+              headers: _anyHeaders)));
 
       // Assuming that a token storage is put into the config
       // which returns an expired token
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
+      when(_mockTokenStorage.read()).thenAnswer((_) => Future.value(Token(
           _ANOTHER_ACCESS_TOKEN,
           _ANOTHER_REFRESH_TOKEN,
           DateTime.now().subtract(Duration(minutes: 10)))));
@@ -609,7 +655,7 @@ void main() {
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
@@ -630,9 +676,9 @@ void main() {
       });
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANY_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
 
     test(
@@ -642,17 +688,19 @@ void main() {
       // the authorization endpoint
       when(_mockClient.post(_anyAuthorizationEndpoint.toString(),
               data: anyNamed('data'), options: anyNamed('options')))
-          .thenAnswer((_) => Future.value(Response(data: {
+          .thenAnswer((_) => Future.value(Response(
+              requestOptions: RequestOptions(path: ""),
+              data: {
                 ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
                 ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
                 ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
                 ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-              }, headers: _anyHeaders)));
+              },
+              headers: _anyHeaders)));
 
       // Assuming that a token storage is put into the config
       // which returns an expired token without refresh token
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
+      when(_mockTokenStorage.read()).thenAnswer((_) => Future.value(Token(
           _ANOTHER_ACCESS_TOKEN,
           null, // no refresh token
           DateTime.now().subtract(Duration(minutes: 10)))));
@@ -661,7 +709,7 @@ void main() {
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
@@ -680,9 +728,9 @@ void main() {
       });
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANY_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
   });
 }

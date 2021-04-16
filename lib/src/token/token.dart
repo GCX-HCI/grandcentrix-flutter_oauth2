@@ -10,13 +10,13 @@ const _expirationGrace = Duration(seconds: 10);
 /// OAuth 2.0 token information including access token, refresh token and expiration date
 class Token {
   String accessToken;
-  String refreshToken;
-  DateTime expiration;
+  String? refreshToken;
+  DateTime? expiration;
 
   Token(this.accessToken, this.refreshToken, this.expiration);
 
   /// Validates the response and creates a new [Token] object in the end
-  factory Token.fromResponse(Response response, DateTime startTime) {
+  factory Token.fromResponse(Response? response, DateTime? startTime) {
     if (response == null || response.data is! Map) {
       throw FormatException('Response data cannot be read.');
     }
@@ -69,16 +69,16 @@ class Token {
   }
 
   bool get isExpired =>
-      expiration == null || DateTime.now().isAfter(expiration);
+      expiration == null || DateTime.now().isAfter(expiration!);
 }
 
 /// Storage to save token persistently
 abstract class TokenStorage {
   /// Write token
-  Future write(Token token);
+  Future write(Token? token);
 
   /// Read token
-  Future<Token> read();
+  Future<Token?> read();
 
   /// Clears the current saved token
   Future clear();
