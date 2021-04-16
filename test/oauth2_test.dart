@@ -2,13 +2,13 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_oauth2/flutter_oauth2.dart';
+import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import "package:test/test.dart";
 
-class MockClient extends Mock implements Dio {}
+import 'oauth2_test.mocks.dart';
 
-class MockTokenStorage extends Mock implements TokenStorage {}
-
+@GenerateMocks([Dio, TokenStorage])
 void main() {
   const _ANY_ACCESS_TOKEN = "anyAccessToken";
   const _ANY_REFRESH_TOKEN = "anyRefreshToken";
@@ -29,21 +29,25 @@ void main() {
   late Uri _anyAuthorizationEndpoint;
   late Headers _anyHeaders;
   late Uri _anyErrorUri;
+  late TokenStorage _mockTokenStorage;
 
   setUp(() {
-    _mockClient = MockClient();
+    _mockClient = MockDio();
     _anyCredentials = Credentials("any", "any");
     _anyAuthorizationEndpoint = Uri.https("mock.gcx", "/mockToken");
     _anyErrorUri = Uri.https("mock.gcx", "/mockError");
     _anyHeaders = Headers();
     _anyHeaders.add(HeaderTypeConst.CONTENT_TYPE, _ANY_CONTENT_TYPE);
+    _mockTokenStorage = MockTokenStorage();
+    when(_mockTokenStorage.clear()).thenAnswer((_) async => null);
+    when(_mockTokenStorage.read()).thenAnswer((_) async => null);
+    when(_mockTokenStorage.write(any)).thenAnswer((_) async => null);
   });
 
   group("Grant Type", () {
     test('"refresh_token" returns token if token is persistent', () async {
       // Assuming that a token storage is put into the config
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
+      when(_mockTokenStorage.read()).thenAnswer((_) => Future.value(Token(
             _ANOTHER_ACCESS_TOKEN,
             _ANOTHER_REFRESH_TOKEN,
             DateTime.now().add(Duration(minutes: 10)),
@@ -55,27 +59,25 @@ void main() {
           grantType: GrantType.REFRESH_TOKEN,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
-      var token = await (handler.authenticate() as FutureOr<Token>);
+      var token = await handler.authenticate();
 
       // Expect the read method of the token storage to be called
-      verify(tokenStorage.read());
+      verify(_mockTokenStorage.read());
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANOTHER_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANOTHER_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANOTHER_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANOTHER_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
 
     test('"refresh_token" throws error if token is not persistent', () async {
       // Assuming that a token storage is put into the config
       // which does not include a token
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read())
-          .thenAnswer(((_) => null) as Future<Token?> Function(Invocation));
+      when(_mockTokenStorage.read()).thenAnswer(((_) async => null));
 
       // And the authorization method is set to "refresh_token"
       var config = Config(
@@ -83,7 +85,7 @@ void main() {
           grantType: GrantType.REFRESH_TOKEN,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
@@ -118,7 +120,7 @@ void main() {
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
-      var token = await (handler.authenticate() as FutureOr<Token>);
+      var token = await handler.authenticate();
 
       // Expect the client to be called once
       var verified = verify(_mockClient.post(
@@ -133,9 +135,9 @@ void main() {
       });
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANY_ACCESS_TOKEN);
-      expect(token.refreshToken, null);
-      expect(token.expiration, isNot(null));
+      expect(token?.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token?.refreshToken, null);
+      expect(token?.expiration, isNot(null));
     });
 
     test('"password" returns token', () async {
@@ -163,7 +165,7 @@ void main() {
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
-      var token = await (handler.authenticate() as FutureOr<Token>);
+      var token = await handler.authenticate();
 
       // Expect the client to be called once
       var verified = verify(_mockClient.post(
@@ -180,9 +182,9 @@ void main() {
       });
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANY_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
   });
 
@@ -517,26 +519,24 @@ void main() {
               headers: _anyHeaders)));
 
       // and a token storage is put into the config
-      var tokenStorage = MockTokenStorage();
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called with the reset flag
       OAuth2 handler = OAuth2(config);
       await handler.authenticate(reset: true);
 
       // Expect the clear method of the token storage to be called
-      verify(tokenStorage.clear());
+      verify(_mockTokenStorage.clear());
     });
 
     test('is used to read token if no token is in memory', () async {
       // Assuming that a token storage is put into the config
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
+      when(_mockTokenStorage.read()).thenAnswer((_) => Future.value(Token(
           _ANOTHER_ACCESS_TOKEN,
           _ANOTHER_REFRESH_TOKEN,
           DateTime.now().add(Duration(minutes: 10)))));
@@ -545,19 +545,19 @@ void main() {
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
-      var token = await (handler.authenticate() as FutureOr<Token>);
+      var token = await handler.authenticate();
 
       // Expect the read method of the token storage to be called
-      verify(tokenStorage.read());
+      verify(_mockTokenStorage.read());
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANOTHER_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANOTHER_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANOTHER_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANOTHER_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
 
     test('is used to write token if new token is received', () async {
@@ -575,13 +575,12 @@ void main() {
               headers: _anyHeaders)));
 
       // and a token storage is put into the config
-      var tokenStorage = MockTokenStorage();
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
@@ -589,7 +588,7 @@ void main() {
 
       // Expect the write method of the token storage to be called
       // after a new token is received
-      verify(tokenStorage.write(argThat(isNotNull)));
+      verify(_mockTokenStorage.write(argThat(isNotNull)));
     });
 
     test('is allowed to return empty value', () async {
@@ -608,27 +607,24 @@ void main() {
               headers: _anyHeaders)));
 
       // and a token storage is put into the config
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read())
-          .thenAnswer(((_) => null) as Future<Token?> Function(Invocation));
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
-      var token = await (handler.authenticate() as FutureOr<Token>);
+      var token = await handler.authenticate();
 
       // Expect the read method of the token storage to be called
-      verify(tokenStorage.read());
+      verify(_mockTokenStorage.read());
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANY_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
   });
 
@@ -650,8 +646,7 @@ void main() {
 
       // Assuming that a token storage is put into the config
       // which returns an expired token
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
+      when(_mockTokenStorage.read()).thenAnswer((_) => Future.value(Token(
           _ANOTHER_ACCESS_TOKEN,
           _ANOTHER_REFRESH_TOKEN,
           DateTime.now().subtract(Duration(minutes: 10)))));
@@ -660,11 +655,11 @@ void main() {
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
-      var token = await (handler.authenticate() as FutureOr<Token>);
+      var token = await handler.authenticate();
 
       // Expect the client to be called once
       var verified = verify(_mockClient.post(
@@ -681,9 +676,9 @@ void main() {
       });
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANY_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
 
     test(
@@ -705,8 +700,7 @@ void main() {
 
       // Assuming that a token storage is put into the config
       // which returns an expired token without refresh token
-      var tokenStorage = MockTokenStorage();
-      when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
+      when(_mockTokenStorage.read()).thenAnswer((_) => Future.value(Token(
           _ANOTHER_ACCESS_TOKEN,
           null, // no refresh token
           DateTime.now().subtract(Duration(minutes: 10)))));
@@ -715,11 +709,11 @@ void main() {
           grantType: GrantType.CLIENT_CREDENTIALS,
           clientCredentials: _anyCredentials,
           httpClient: _mockClient,
-          tokenStorage: tokenStorage);
+          tokenStorage: _mockTokenStorage);
 
       // If the OAuth2 authentication is called
       OAuth2 handler = OAuth2(config);
-      var token = await (handler.authenticate() as FutureOr<Token>);
+      var token = await handler.authenticate();
 
       // Expect the client to be called once
       var verified = verify(_mockClient.post(
@@ -734,9 +728,9 @@ void main() {
       });
 
       // Expect the valid token to be returned
-      expect(token.accessToken, _ANY_ACCESS_TOKEN);
-      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
-      expect(token.expiration, isNotNull);
+      expect(token?.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token?.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token?.expiration, isNotNull);
     });
   });
 }
