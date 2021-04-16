@@ -133,13 +133,12 @@ class OAuth2 {
 
     if (_latestToken?.isExpired == true) {
       if (_latestToken?.refreshToken != null) {
-        _latestToken = await _refreshToken(_latestToken!.refreshToken);
-        await _onNewToken(_latestToken);
+        _latestToken = await _refreshToken(_latestToken?.refreshToken);
       } else {
         // If there is no refresh token, try to get a new token by credentials
         _latestToken = await _getToken();
-        await _onNewToken(_latestToken);
       }
+      await _onNewToken(_latestToken);
     }
 
     return _latestToken;
@@ -174,7 +173,7 @@ class OAuth2 {
   }
 
   /// Refreshes the current token by using the refresh token
-  Future<Token?> _refreshToken(var refreshToken) async {
+  Future<Token?> _refreshToken(String? refreshToken) async {
     var body = {
       RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.REFRESH_TOKEN,
       RequestDataFieldConst.REFRESH_TOKEN: refreshToken
