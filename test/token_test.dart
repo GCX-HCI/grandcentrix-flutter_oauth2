@@ -9,7 +9,7 @@ void main() {
   const _ANY_TOKEN_TYPE = AuthorizationTypeConst.BEARER;
   const _ANY_CONTENT_TYPE = "anyContentType";
 
-  Headers _anyHeaders;
+  late Headers _anyHeaders;
 
   setUp(() {
     _anyHeaders = Headers();
@@ -43,12 +43,15 @@ void main() {
 
   group("Factory", () {
     test('returns token if response is valid', () {
-      var response = Response(data: {
-        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-        ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-        ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
-        ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-      }, headers: _anyHeaders);
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: {
+            ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+            ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+            ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+            ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
+          },
+          headers: _anyHeaders);
 
       var token = Token.fromResponse(response, DateTime.now());
 
@@ -59,12 +62,15 @@ void main() {
     });
 
     test('returns token if response does not include a refresh token', () {
-      var response = Response(data: {
-        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-        // no refresh token
-        ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
-        ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-      }, headers: _anyHeaders);
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: {
+            ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+            // no refresh token
+            ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+            ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
+          },
+          headers: _anyHeaders);
 
       var token = Token.fromResponse(response, DateTime.now());
 
@@ -75,11 +81,14 @@ void main() {
     });
 
     test('returns token if response does not include "expires_in"', () {
-      var response = Response(data: {
-        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-        ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-        ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-      }, headers: _anyHeaders);
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: {
+            ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+            ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+            ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
+          },
+          headers: _anyHeaders);
 
       var token = Token.fromResponse(response, DateTime.now());
 
@@ -90,12 +99,15 @@ void main() {
     });
 
     test('returns token with empty expiration if no start time is given', () {
-      var response = Response(data: {
-        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-        ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-        ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
-        ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-      }, headers: _anyHeaders);
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: {
+            ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+            ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+            ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+            ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
+          },
+          headers: _anyHeaders);
 
       var token = Token.fromResponse(response, null);
 
@@ -115,7 +127,10 @@ void main() {
     });
 
     test('throws FormatException if response data is not a map', () {
-      var response = Response(data: ["not a map"], headers: _anyHeaders);
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: ["not a map"],
+          headers: _anyHeaders);
 
       try {
         Token.fromResponse(response, DateTime.now());
@@ -126,12 +141,15 @@ void main() {
     });
 
     test('throws FormatException if content type is missing', () {
-      var response = Response(data: {
-        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-        ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-        ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
-        ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-      }, headers: Headers());
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: {
+            ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+            ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+            ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+            ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
+          },
+          headers: Headers());
 
       try {
         Token.fromResponse(response, DateTime.now());
@@ -142,12 +160,15 @@ void main() {
     });
 
     test('throws FormatException if access token is missing', () {
-      var response = Response(data: {
-        // no access token
-        ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-        ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
-        ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-      }, headers: _anyHeaders);
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: {
+            // no access token
+            ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+            ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+            ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
+          },
+          headers: _anyHeaders);
 
       try {
         Token.fromResponse(response, DateTime.now());
@@ -161,12 +182,15 @@ void main() {
     });
 
     test('throws FormatException if token type is missing', () {
-      var response = Response(data: {
-        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-        ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-        ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN
-        // no token type
-      }, headers: _anyHeaders);
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: {
+            ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+            ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+            ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN
+            // no token type
+          },
+          headers: _anyHeaders);
 
       try {
         Token.fromResponse(response, DateTime.now());
@@ -180,13 +204,16 @@ void main() {
     });
 
     test('throws FormatException if token type is incorrect', () {
-      var response = Response(data: {
-        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-        ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-        ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
-        ResponseDataFieldConst.TOKEN_TYPE: "wrong token type"
-        // no token type
-      }, headers: _anyHeaders);
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: {
+            ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+            ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+            ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+            ResponseDataFieldConst.TOKEN_TYPE: "wrong token type"
+            // no token type
+          },
+          headers: _anyHeaders);
 
       try {
         Token.fromResponse(response, DateTime.now());
@@ -197,13 +224,16 @@ void main() {
     });
 
     test('throws FormatException if "expires in" is not an integer', () {
-      var response = Response(data: {
-        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-        ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
-        ResponseDataFieldConst.EXPIRES_IN: "not an integer",
-        ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-        // no token type
-      }, headers: _anyHeaders);
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: {
+            ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+            ResponseDataFieldConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+            ResponseDataFieldConst.EXPIRES_IN: "not an integer",
+            ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
+            // no token type
+          },
+          headers: _anyHeaders);
 
       try {
         Token.fromResponse(response, DateTime.now());
@@ -217,13 +247,16 @@ void main() {
     });
 
     test('throws FormatException if refresh token is not a string', () {
-      var response = Response(data: {
-        ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
-        ResponseDataFieldConst.REFRESH_TOKEN: ["not a string"],
-        ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
-        ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
-        // no token type
-      }, headers: _anyHeaders);
+      var response = Response(
+          requestOptions: RequestOptions(path: ""),
+          data: {
+            ResponseDataFieldConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+            ResponseDataFieldConst.REFRESH_TOKEN: ["not a string"],
+            ResponseDataFieldConst.EXPIRES_IN: _ANY_EXPIRES_IN,
+            ResponseDataFieldConst.TOKEN_TYPE: _ANY_TOKEN_TYPE
+            // no token type
+          },
+          headers: _anyHeaders);
 
       try {
         Token.fromResponse(response, DateTime.now());

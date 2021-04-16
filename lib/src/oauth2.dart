@@ -3,7 +3,6 @@ import 'package:flutter_oauth2/src/helper/const.dart';
 import 'package:flutter_oauth2/src/helper/exception.dart';
 import 'package:flutter_oauth2/src/helper/utils.dart';
 import 'package:flutter_oauth2/src/token/token.dart';
-import 'package:meta/meta.dart';
 
 /// Credentials of any type e.g. client and user
 class Credentials {
@@ -19,42 +18,42 @@ class Config {
   Uri authorizationEndpoint;
 
   /// The client credentials used to authorize
-  Credentials clientCredentials;
+  Credentials? clientCredentials;
 
   /// The user credentials used to authorize. Only used if grant type is [GrantType.PASSWORD]
-  Credentials userCredentials;
+  Credentials? userCredentials;
 
   /// Additional headers to add to the token request
-  Map<String, dynamic> additionalHeaders;
+  late Map<String, dynamic> additionalHeaders;
 
   /// Grant type as defined by [GrantType]. Default is [GrantType.CLIENT_CREDENTIALS]
   GrantType grantType;
 
   /// Storage to save token into. By default tokens are not saved
-  TokenStorage tokenStorage;
+  TokenStorage? tokenStorage;
 
   /// Function called when an error response is received. Default is validating OAuth 2.0 fields
-  Function(Response) errorHandler;
+  Function(Response?) errorHandler;
 
   /// The HTTP client to use
-  Dio httpClient;
+  late Dio httpClient;
 
   Config(
-      {@required this.authorizationEndpoint,
+      {required this.authorizationEndpoint,
       this.grantType = GrantType.CLIENT_CREDENTIALS,
       this.clientCredentials,
       this.userCredentials,
-      Map<String, dynamic> additionalHeaders,
+      Map<String, dynamic>? additionalHeaders,
       this.tokenStorage,
       this.errorHandler = _defaultErrorHandler,
-      Dio httpClient}) {
+      Dio? httpClient}) {
     this.additionalHeaders = additionalHeaders ?? {};
     this.httpClient = httpClient ?? Dio();
   }
 }
 
 /// Validates an error response and throws an exception in the end
-_defaultErrorHandler(Response response) {
+_defaultErrorHandler(Response? response) {
   if (response == null || response.data is! Map) {
     throw FormatException('Response data cannot be read.');
   }
@@ -111,25 +110,21 @@ _defaultErrorHandler(Response response) {
 /// It's the main class that you have to interact with.
 class OAuth2 {
   Config _config;
-  Token _latestToken;
+  Token? _latestToken;
 
-  OAuth2(this._config) {
-    if (this._config == null) {
-      throw ArgumentError("Config cannot be null");
-    }
-  }
+  OAuth2(this._config);
 
   /// Requests a token from the endpoint and returns it. Should be called before any HTTP call.
   ///
   /// If there is already a token available, the expiration will be checked.
   /// If the available token is expired, a new token will be requested by using the refresh token or by using the credentials.
-  Future<Token> authenticate({bool reset = false}) async {
+  Future<Token?> authenticate({bool reset = false}) async {
     if (reset) {
       await _reset();
     }
 
     if (_config.tokenStorage != null) {
-      _latestToken = _latestToken ?? await _config.tokenStorage.read();
+      _latestToken = _latestToken ?? await _config.tokenStorage!.read();
     }
 
     if (_latestToken == null) {
@@ -138,9 +133,9 @@ class OAuth2 {
       return _latestToken;
     }
 
-    if (_latestToken.isExpired) {
-      if (_latestToken.refreshToken != null) {
-        _latestToken = await _refreshToken(_latestToken.refreshToken);
+    if (_latestToken!.isExpired) {
+      if (_latestToken!.refreshToken != null) {
+        _latestToken = await _refreshToken(_latestToken!.refreshToken);
         await _onNewToken(_latestToken);
       } else {
         // If there is no refresh token, try to get a new token by credentials
@@ -155,19 +150,19 @@ class OAuth2 {
   /// Resets all caches
   Future _reset() async {
     if (_config.tokenStorage != null) {
-      await _config.tokenStorage.clear();
+      await _config.tokenStorage!.clear();
     }
     _latestToken = null;
   }
 
-  Future _onNewToken(Token token) async {
+  Future _onNewToken(Token? token) async {
     if (_config.tokenStorage != null) {
-      await _config.tokenStorage.write(_latestToken);
+      await _config.tokenStorage!.write(_latestToken);
     }
   }
 
   /// Gets a new token considering the configured grant type
-  Future<Token> _getToken() async {
+  Future<Token?> _getToken() async {
     if (_config.grantType == GrantType.REFRESH_TOKEN) {
       throw StateError(
           'Set GrantType to REFRESH_TOKEN, but cannot find token in TokenStorage');
@@ -177,15 +172,15 @@ class OAuth2 {
         ? {RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS}
         : {
             RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.PASSWORD,
-            RequestDataFieldConst.USERNAME: _config.userCredentials.username,
-            RequestDataFieldConst.PASSWORD: _config.userCredentials.password
+            RequestDataFieldConst.USERNAME: _config.userCredentials!.username,
+            RequestDataFieldConst.PASSWORD: _config.userCredentials!.password
           };
 
     return _requestToken(body);
   }
 
   /// Refreshes the current token by using the refresh token
-  Future<Token> _refreshToken(var refreshToken) async {
+  Future<Token?> _refreshToken(var refreshToken) async {
     var body = {
       RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.REFRESH_TOKEN,
       RequestDataFieldConst.REFRESH_TOKEN: refreshToken
@@ -195,18 +190,18 @@ class OAuth2 {
   }
 
   /// General token request used to get and refresh token
-  Future<Token> _requestToken(var body) async {
+  Future<Token?> _requestToken(var body) async {
     var startTime = DateTime.now();
 
     Options options = Options(contentType: Headers.formUrlEncodedContentType);
     if (_config.clientCredentials != null) {
-      options.headers[HeaderTypeConst.AUTHORIZATION] = basicAuthHeader(
-          _config.clientCredentials.username,
-          _config.clientCredentials.password);
+      options.headers![HeaderTypeConst.AUTHORIZATION] = basicAuthHeader(
+          _config.clientCredentials!.username,
+          _config.clientCredentials!.password);
     }
 
     if (_config.additionalHeaders.isNotEmpty) {
-      options.headers.addAll(_config.additionalHeaders);
+      options.headers!.addAll(_config.additionalHeaders);
     }
 
     try {
