@@ -193,7 +193,10 @@ class OAuth2 {
   Future<Token?> _requestToken(var body) async {
     var startTime = DateTime.now();
 
-    Options options = Options(contentType: Headers.formUrlEncodedContentType);
+    Options options = Options(
+      contentType: Headers.formUrlEncodedContentType,
+      headers: {},
+    );
     if (_config.clientCredentials != null) {
       options.headers![HeaderTypeConst.AUTHORIZATION] = basicAuthHeader(
           _config.clientCredentials!.username,
