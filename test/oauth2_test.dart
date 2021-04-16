@@ -44,9 +44,10 @@ void main() {
       // Assuming that a token storage is put into the config
       var tokenStorage = MockTokenStorage();
       when(tokenStorage.read()).thenAnswer((_) => Future.value(Token(
-          _ANOTHER_ACCESS_TOKEN,
-          _ANOTHER_REFRESH_TOKEN,
-          DateTime.now().add(Duration(minutes: 10)))));
+            _ANOTHER_ACCESS_TOKEN,
+            _ANOTHER_REFRESH_TOKEN,
+            DateTime.now().add(Duration(minutes: 10)),
+          )));
 
       // And the authorization method is set to "refresh_token"
       var config = Config(
@@ -74,7 +75,7 @@ void main() {
       // which does not include a token
       var tokenStorage = MockTokenStorage();
       when(tokenStorage.read())
-          .thenAnswer(((_) => null) as Future<Token> Function(Invocation));
+          .thenAnswer(((_) => null) as Future<Token?> Function(Invocation));
 
       // And the authorization method is set to "refresh_token"
       var config = Config(
@@ -609,7 +610,7 @@ void main() {
       // and a token storage is put into the config
       var tokenStorage = MockTokenStorage();
       when(tokenStorage.read())
-          .thenAnswer(((_) => null) as Future<Token> Function(Invocation));
+          .thenAnswer(((_) => null) as Future<Token?> Function(Invocation));
       var config = Config(
           authorizationEndpoint: _anyAuthorizationEndpoint,
           grantType: GrantType.CLIENT_CREDENTIALS,

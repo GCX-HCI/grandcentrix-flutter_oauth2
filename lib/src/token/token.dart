@@ -78,7 +78,7 @@ abstract class TokenStorage {
   Future write(Token? token);
 
   /// Read token
-  Future<Token> read();
+  Future<Token?> read();
 
   /// Clears the current saved token
   Future clear();
