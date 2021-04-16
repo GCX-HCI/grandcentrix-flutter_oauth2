@@ -123,9 +123,7 @@ class OAuth2 {
       await _reset();
     }
 
-    if (_config.tokenStorage != null) {
-      _latestToken = _latestToken ?? await _config.tokenStorage!.read();
-    }
+    _latestToken = _latestToken ?? await _config.tokenStorage?.read();
 
     if (_latestToken == null) {
       _latestToken = await _getToken();
@@ -133,8 +131,8 @@ class OAuth2 {
       return _latestToken;
     }
 
-    if (_latestToken!.isExpired) {
-      if (_latestToken!.refreshToken != null) {
+    if (_latestToken?.isExpired == true) {
+      if (_latestToken?.refreshToken != null) {
         _latestToken = await _refreshToken(_latestToken!.refreshToken);
         await _onNewToken(_latestToken);
       } else {
@@ -149,16 +147,12 @@ class OAuth2 {
 
   /// Resets all caches
   Future _reset() async {
-    if (_config.tokenStorage != null) {
-      await _config.tokenStorage!.clear();
-    }
+    await _config.tokenStorage?.clear();
     _latestToken = null;
   }
 
   Future _onNewToken(Token? token) async {
-    if (_config.tokenStorage != null) {
-      await _config.tokenStorage!.write(_latestToken);
-    }
+    await _config.tokenStorage?.write(_latestToken);
   }
 
   /// Gets a new token considering the configured grant type
