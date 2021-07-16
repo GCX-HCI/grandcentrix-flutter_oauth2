@@ -85,16 +85,22 @@ class Token {
       accessToken.hashCode ^ refreshToken.hashCode ^ expiration.hashCode;
 
   Map<String, dynamic> toJson() => {
-        "accessToken": accessToken,
-        "refreshToken": refreshToken,
-        "expiration": expiration?.toIso8601String(),
+        TokenSerializationConst.ACCESS_TOKEN: accessToken,
+        TokenSerializationConst.REFRESH_TOKEN: refreshToken,
+        TokenSerializationConst.EXPIRATION: expiration?.toIso8601String(),
       };
 
   factory Token.fromJson(Map<String, dynamic> json) => Token(
-        json["accessToken"]!,
-        json["refreshToken"],
-        DateTime.tryParse(json["expiration"]),
+        json[TokenSerializationConst.ACCESS_TOKEN]!,
+        json[TokenSerializationConst.REFRESH_TOKEN],
+        DateTime.tryParse(json[TokenSerializationConst.EXPIRATION]),
       );
+}
+
+abstract class TokenSerializationConst {
+  static const ACCESS_TOKEN = 'accessToken';
+  static const REFRESH_TOKEN = 'refreshToken';
+  static const EXPIRATION = 'expiration';
 }
 
 /// Storage to save token persistently
