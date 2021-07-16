@@ -83,6 +83,18 @@ class Token {
   @override
   int get hashCode =>
       accessToken.hashCode ^ refreshToken.hashCode ^ expiration.hashCode;
+
+  Map<String, dynamic> toJson() => {
+        "accessToken": accessToken,
+        "refreshToken": refreshToken,
+        "expiration": expiration?.toIso8601String(),
+      };
+
+  factory Token.fromJson(Map<String, dynamic> json) => Token(
+        json["accessToken"]!,
+        json["refreshToken"],
+        DateTime.tryParse(json["expiration"]),
+      );
 }
 
 /// Storage to save token persistently
