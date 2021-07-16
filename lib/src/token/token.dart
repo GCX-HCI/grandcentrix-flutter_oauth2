@@ -70,6 +70,19 @@ class Token {
 
   bool get isExpired =>
       expiration == null || DateTime.now().isAfter(expiration!);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Token &&
+          runtimeType == other.runtimeType &&
+          accessToken == other.accessToken &&
+          refreshToken == other.refreshToken &&
+          expiration == other.expiration;
+
+  @override
+  int get hashCode =>
+      accessToken.hashCode ^ refreshToken.hashCode ^ expiration.hashCode;
 }
 
 /// Storage to save token persistently
