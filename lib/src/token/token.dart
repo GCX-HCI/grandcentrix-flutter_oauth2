@@ -90,11 +90,15 @@ class Token {
         TokenSerializationConst.EXPIRATION: expiration?.toIso8601String(),
       };
 
-  factory Token.fromJson(Map<String, dynamic> json) => Token(
-        json[TokenSerializationConst.ACCESS_TOKEN]!,
-        json[TokenSerializationConst.REFRESH_TOKEN],
-        DateTime.tryParse(json[TokenSerializationConst.EXPIRATION]),
-      );
+  factory Token.fromJson(Map<String, dynamic> json) {
+    var expiration = json[TokenSerializationConst.EXPIRATION];
+
+    return Token(
+      json[TokenSerializationConst.ACCESS_TOKEN]!,
+      json[TokenSerializationConst.REFRESH_TOKEN],
+      expiration != null ? DateTime.tryParse(expiration) : null,
+    );
+  }
 }
 
 abstract class TokenSerializationConst {
