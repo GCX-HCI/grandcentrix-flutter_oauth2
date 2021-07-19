@@ -265,3 +265,53 @@ class OauthClientCredentialsConfig extends OauthConfig {
         RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS,
       };
 }
+
+typedef Future<String> AuthCodeProvider();
+
+class OauthAuthCodeConfig extends OauthConfig {
+  final GrantType grantType = GrantType.AUTHORIZATION_CODE;
+
+  /// The provider for the current authorization code used to authorize. Only used if grant type is [GrantType.AUTHORIZATION_CODE]
+  final AuthCodeProvider authorizationCodeProvider;
+
+  /// The redirect uri used to fetch the authorization code. Only used if grant type is [GrantType.AUTHORIZATION_CODE]
+  final String? redirectUri;
+
+  OauthAuthCodeConfig({
+    required this.authorizationCodeProvider,
+    required this.redirectUri,
+    clientCredentials,
+    required Uri authorizationEndpoint,
+    Map<String, dynamic>? additionalHeaders,
+    TokenStorage? tokenStorage,
+    Function(Response?)? errorHandler,
+    Dio? httpClient,
+  }) : super(
+    grantType: GrantType.AUTHORIZATION_CODE,
+    authorizationEndpoint: authorizationEndpoint,
+    clientCredentials: clientCredentials,
+    additionalHeaders: additionalHeaders,
+    tokenStorage: tokenStorage,
+    errorHandler: errorHandler = _defaultErrorHandler,
+    httpClient: httpClient,
+  );
+
+  @override
+  Future<Map<String, dynamic>> createTokenRequestBody() async {
+    var body = {
+      RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.AUTHORIZATION_CODE,
+      RequestDataFieldConst.REDIRECT_URI: redirectUri,
+      RequestDataFieldConst.AUTHORIZATION_CODE:
+      await authorizationCodeProvider.call(),
+    };
+
+    if (clientCredentials != null) {
+      body.addAll({
+        RequestDataFieldConst.CLIENT_ID: clientCredentials!.username,
+        RequestDataFieldConst.CLIENT_SECRET: clientCredentials!.password,
+      });
+    }
+
+    return body;
+  }
+}
