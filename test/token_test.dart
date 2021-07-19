@@ -41,7 +41,7 @@ void main() {
     });
   });
 
-  group("Factory", () {
+  group("From Response Factory", () {
     test('returns token if response is valid', () {
       var response = Response(
           requestOptions: RequestOptions(path: ""),
@@ -267,6 +267,36 @@ void main() {
             contains(
                 'parameter "${ResponseDataFieldConst.REFRESH_TOKEN}" was not a string, was'));
       }
+    });
+  });
+
+  group('JSON Serialization', () {
+    test('returns all Token properties in Json', () {
+      var expiration = DateTime.now();
+      var token = Token(_ANY_ACCESS_TOKEN, _ANY_REFRESH_TOKEN, expiration);
+
+      var json = token.toJson();
+
+      expect(
+          json,
+          equals({
+            TokenSerializationConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+            TokenSerializationConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+            TokenSerializationConst.EXPIRATION: expiration.toIso8601String(),
+          }));
+    });
+
+    test('returns valid Token from Json', () {
+      var json = {
+        TokenSerializationConst.ACCESS_TOKEN: _ANY_ACCESS_TOKEN,
+        TokenSerializationConst.REFRESH_TOKEN: _ANY_REFRESH_TOKEN,
+      };
+
+      var token = Token.fromJson(json);
+
+      expect(token.accessToken, _ANY_ACCESS_TOKEN);
+      expect(token.refreshToken, _ANY_REFRESH_TOKEN);
+      expect(token.expiration, null);
     });
   });
 }
