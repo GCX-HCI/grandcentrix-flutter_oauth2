@@ -70,6 +70,41 @@ class Token {
 
   bool get isExpired =>
       expiration == null || DateTime.now().isAfter(expiration!);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Token &&
+          runtimeType == other.runtimeType &&
+          accessToken == other.accessToken &&
+          refreshToken == other.refreshToken &&
+          expiration == other.expiration;
+
+  @override
+  int get hashCode =>
+      accessToken.hashCode ^ refreshToken.hashCode ^ expiration.hashCode;
+
+  Map<String, dynamic> toJson() => {
+        TokenSerializationConst.ACCESS_TOKEN: accessToken,
+        TokenSerializationConst.REFRESH_TOKEN: refreshToken,
+        TokenSerializationConst.EXPIRATION: expiration?.toIso8601String(),
+      };
+
+  factory Token.fromJson(Map<String, dynamic> json) {
+    var expiration = json[TokenSerializationConst.EXPIRATION];
+
+    return Token(
+      json[TokenSerializationConst.ACCESS_TOKEN]!,
+      json[TokenSerializationConst.REFRESH_TOKEN],
+      expiration != null ? DateTime.tryParse(expiration) : null,
+    );
+  }
+}
+
+abstract class TokenSerializationConst {
+  static const ACCESS_TOKEN = 'accessToken';
+  static const REFRESH_TOKEN = 'refreshToken';
+  static const EXPIRATION = 'expiration';
 }
 
 /// Storage to save token persistently
