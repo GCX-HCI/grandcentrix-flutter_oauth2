@@ -209,8 +209,6 @@ abstract class OauthConfig {
 }
 
 class OauthPasswordConfig extends OauthConfig {
-  final GrantType grantType = GrantType.PASSWORD;
-
   /// The user credentials used to authorize.
   final Credentials userCredentials;
 
