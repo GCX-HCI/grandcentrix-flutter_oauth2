@@ -10,13 +10,6 @@ class AuthorizationTypeConst {
   static const BASIC = 'Basic';
 }
 
-enum GrantType {
-  PASSWORD,
-  CLIENT_CREDENTIALS,
-  REFRESH_TOKEN,
-  AUTHORIZATION_CODE
-}
-
 /// Grant types included in OAuth 2.0
 class GrantTypeConst {
   static const PASSWORD = 'password';

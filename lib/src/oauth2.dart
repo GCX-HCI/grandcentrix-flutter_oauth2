@@ -92,12 +92,7 @@ class OAuth2 {
     }
 
     if (_latestToken?.isExpired == true) {
-      if (_latestToken?.refreshToken != null) {
-        _latestToken = await _refreshToken(_latestToken?.refreshToken);
-      } else {
-        // If there is no refresh token, try to get a new token by credentials
-        _latestToken = await _getToken();
-      }
+      _latestToken = await _getToken(refreshToken: _latestToken?.refreshToken);
       await _onNewToken(_latestToken);
     }
 
@@ -115,23 +110,9 @@ class OAuth2 {
   }
 
   /// Gets a new token considering the configured grant type
-  Future<Token?> _getToken() async {
-    if (_config.grantType == GrantType.REFRESH_TOKEN) {
-      throw StateError(
-          'Set GrantType to REFRESH_TOKEN, but cannot find token in TokenStorage');
-    }
-
-    return _requestToken(await _config.createTokenRequestBody());
-  }
-
-  /// Refreshes the current token by using the refresh token
-  Future<Token?> _refreshToken(String? refreshToken) async {
-    var body = {
-      RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.REFRESH_TOKEN,
-      RequestDataFieldConst.REFRESH_TOKEN: refreshToken
-    };
-
-    return _requestToken(body);
+  Future<Token?> _getToken({String? refreshToken}) async {
+    return _requestToken(
+        await _config.createTokenRequestBody(refreshToken: refreshToken));
   }
 
   /// General token request used to get and refresh token
@@ -173,9 +154,6 @@ abstract class OAuthConfig {
   /// The client credentials used to authorize
   final Credentials? clientCredentials;
 
-  /// Grant type as defined by [GrantType]. Default is [GrantType.CLIENT_CREDENTIALS]
-  final GrantType grantType;
-
   /// Storage to save token into. By default tokens are not saved
   final TokenStorage? tokenStorage;
 
@@ -188,10 +166,9 @@ abstract class OAuthConfig {
   /// The HTTP client to use
   late final Dio httpClient;
 
-  Future<Map<String, dynamic>> createTokenRequestBody();
+  Future<Map<String, dynamic>> createTokenRequestBody({String? refreshToken});
 
   OAuthConfig({
-    required GrantType this.grantType,
     required this.authorizationEndpoint,
     required this.clientCredentials,
     required Map<String, dynamic>? additionalHeaders,
@@ -217,7 +194,6 @@ class OAuthPasswordConfig extends OAuthConfig {
     Function(Response?)? errorHandler,
     Dio? httpClient,
   }) : super(
-          grantType: GrantType.PASSWORD,
           authorizationEndpoint: authorizationEndpoint,
           clientCredentials: clientCredentials,
           additionalHeaders: additionalHeaders,
@@ -227,7 +203,9 @@ class OAuthPasswordConfig extends OAuthConfig {
         );
 
   @override
-  Future<Map<String, dynamic>> createTokenRequestBody() async => {
+  Future<Map<String, dynamic>> createTokenRequestBody(
+          {String? refreshToken}) async =>
+      {
         RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.PASSWORD,
         RequestDataFieldConst.USERNAME: userCredentials.username,
         RequestDataFieldConst.PASSWORD: userCredentials.password,
@@ -243,7 +221,6 @@ class OAuthClientCredentialsConfig extends OAuthConfig {
     Function(Response?)? errorHandler,
     Dio? httpClient,
   }) : super(
-          grantType: GrantType.CLIENT_CREDENTIALS,
           authorizationEndpoint: authorizationEndpoint,
           clientCredentials: clientCredentials,
           additionalHeaders: additionalHeaders,
@@ -253,18 +230,52 @@ class OAuthClientCredentialsConfig extends OAuthConfig {
         );
 
   @override
-  Future<Map<String, dynamic>> createTokenRequestBody() async => {
+  Future<Map<String, dynamic>> createTokenRequestBody(
+          {String? refreshToken}) async =>
+      {
         RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS,
       };
+}
+
+class OAuthRefreshTokenConfig extends OAuthConfig {
+  OAuthRefreshTokenConfig({
+    required Uri authorizationEndpoint,
+    required Credentials clientCredentials,
+    Map<String, dynamic>? additionalHeaders,
+    TokenStorage? tokenStorage,
+    Function(Response?)? errorHandler,
+    Dio? httpClient,
+  }) : super(
+          authorizationEndpoint: authorizationEndpoint,
+          clientCredentials: clientCredentials,
+          additionalHeaders: additionalHeaders,
+          tokenStorage: tokenStorage,
+          errorHandler: errorHandler = _defaultErrorHandler,
+          httpClient: httpClient,
+        );
+
+  @override
+  Future<Map<String, dynamic>> createTokenRequestBody(
+      {String? refreshToken}) async {
+    if (refreshToken == null) {
+      throw StateError(
+          'Set GrantType to REFRESH_TOKEN, but cannot find token in TokenStorage');
+    }
+    var body = {
+      RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.REFRESH_TOKEN,
+      RequestDataFieldConst.REFRESH_TOKEN: refreshToken
+    };
+    return body;
+  }
 }
 
 typedef Future<String> AuthCodeProvider();
 
 class OAuthAuthCodeConfig extends OAuthConfig {
-  /// The provider for the current authorization code used to authorize. Only used if grant type is [GrantType.AUTHORIZATION_CODE]
+  /// The provider for the current authorization code used to authorize.
   final AuthCodeProvider authorizationCodeProvider;
 
-  /// The redirect uri used to fetch the authorization code. Only used if grant type is [GrantType.AUTHORIZATION_CODE]
+  /// The redirect uri used to fetch the authorization code.
   final String? redirectUri;
 
   OAuthAuthCodeConfig({
@@ -277,7 +288,6 @@ class OAuthAuthCodeConfig extends OAuthConfig {
     Function(Response?)? errorHandler,
     Dio? httpClient,
   }) : super(
-          grantType: GrantType.AUTHORIZATION_CODE,
           authorizationEndpoint: authorizationEndpoint,
           clientCredentials: clientCredentials,
           additionalHeaders: additionalHeaders,
@@ -287,7 +297,8 @@ class OAuthAuthCodeConfig extends OAuthConfig {
         );
 
   @override
-  Future<Map<String, dynamic>> createTokenRequestBody() async {
+  Future<Map<String, dynamic>> createTokenRequestBody(
+      {String? refreshToken}) async {
     var body = {
       RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.AUTHORIZATION_CODE,
       RequestDataFieldConst.REDIRECT_URI: redirectUri,
