@@ -69,7 +69,7 @@ _defaultErrorHandler(Response? response) {
 /// Handles the OAuth 2.0 flow.
 /// It's the main class that you have to interact with.
 class OAuth2 {
-  OauthConfig _config;
+  OAuthConfig _config;
   Token? _latestToken;
 
   OAuth2(this._config);
@@ -170,7 +170,7 @@ class OAuth2 {
   }
 }
 
-abstract class OauthConfig {
+abstract class OAuthConfig {
   /// The endpoint to send the token request to
   final Uri authorizationEndpoint;
 
@@ -194,7 +194,7 @@ abstract class OauthConfig {
 
   Future<Map<String, dynamic>> createTokenRequestBody();
 
-  OauthConfig({
+  OAuthConfig({
     required GrantType this.grantType,
     required this.authorizationEndpoint,
     required this.clientCredentials,
@@ -208,11 +208,11 @@ abstract class OauthConfig {
   }
 }
 
-class OauthPasswordConfig extends OauthConfig {
+class OAuthPasswordConfig extends OAuthConfig {
   /// The user credentials used to authorize.
   final Credentials userCredentials;
 
-  OauthPasswordConfig({
+  OAuthPasswordConfig({
     required this.userCredentials,
     required Uri authorizationEndpoint,
     clientCredentials,
@@ -238,8 +238,8 @@ class OauthPasswordConfig extends OauthConfig {
       };
 }
 
-class OauthClientCredentialsConfig extends OauthConfig {
-  OauthClientCredentialsConfig({
+class OAuthClientCredentialsConfig extends OAuthConfig {
+  OAuthClientCredentialsConfig({
     required Uri authorizationEndpoint,
     required Credentials clientCredentials,
     Map<String, dynamic>? additionalHeaders,
@@ -264,14 +264,14 @@ class OauthClientCredentialsConfig extends OauthConfig {
 
 typedef Future<String> AuthCodeProvider();
 
-class OauthAuthCodeConfig extends OauthConfig {
+class OAuthAuthCodeConfig extends OAuthConfig {
   /// The provider for the current authorization code used to authorize. Only used if grant type is [GrantType.AUTHORIZATION_CODE]
   final AuthCodeProvider authorizationCodeProvider;
 
   /// The redirect uri used to fetch the authorization code. Only used if grant type is [GrantType.AUTHORIZATION_CODE]
   final String? redirectUri;
 
-  OauthAuthCodeConfig({
+  OAuthAuthCodeConfig({
     required this.authorizationCodeProvider,
     required this.redirectUri,
     clientCredentials,

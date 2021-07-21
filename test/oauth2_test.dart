@@ -54,7 +54,7 @@ void main() {
           )));
 
       // And the authorization method is set to "refresh_token"
-      var config = OauthClientCredentialsConfig(
+      var config = OAuthClientCredentialsConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         httpClient: _mockClient,
@@ -80,7 +80,7 @@ void main() {
       when(_mockTokenStorage.read()).thenAnswer(((_) async => null));
 
       // And the authorization method is set to "refresh_token"
-      var config = OauthClientCredentialsConfig(
+      var config = OAuthClientCredentialsConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         httpClient: _mockClient,
@@ -112,7 +112,7 @@ void main() {
               headers: _anyHeaders)));
 
       // And the authorization method is set to "client_credentials"
-      var config = OauthClientCredentialsConfig(
+      var config = OAuthClientCredentialsConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         httpClient: _mockClient,
@@ -156,7 +156,7 @@ void main() {
               headers: _anyHeaders)));
 
       // And the authorization method is set to "password"
-      var config = OauthPasswordConfig(
+      var config = OAuthPasswordConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         userCredentials: _anyCredentials,
@@ -208,7 +208,7 @@ void main() {
         ),
       );
 
-      var config = OauthPasswordConfig(
+      var config = OAuthPasswordConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         userCredentials: _anyCredentials,
@@ -244,7 +244,7 @@ void main() {
                 },
               )));
 
-      var config = OauthPasswordConfig(
+      var config = OAuthPasswordConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         userCredentials: _anyCredentials,
@@ -278,7 +278,7 @@ void main() {
         ),
       );
 
-      var config = OauthPasswordConfig(
+      var config = OAuthPasswordConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         userCredentials: _anyCredentials,
@@ -312,7 +312,7 @@ void main() {
                 },
               )));
 
-      var config = OauthPasswordConfig(
+      var config = OAuthPasswordConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         userCredentials: _anyCredentials,
@@ -347,7 +347,7 @@ void main() {
                     ResponseDataFieldConst.ERROR_LIST: "wrong error type"
                   })));
 
-      var config = OauthPasswordConfig(
+      var config = OAuthPasswordConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         userCredentials: _anyCredentials,
@@ -385,7 +385,7 @@ void main() {
                 ResponseDataFieldConst.ERROR_URI: _anyErrorUri.toString()
               })));
 
-      var config = OauthPasswordConfig(
+      var config = OAuthPasswordConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         userCredentials: _anyCredentials,
@@ -424,7 +424,7 @@ void main() {
                 },
               )));
 
-      var config = OauthPasswordConfig(
+      var config = OAuthPasswordConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         userCredentials: _anyCredentials,
@@ -453,7 +453,7 @@ void main() {
               data: anyNamed('data'), options: anyNamed('options')))
           .thenThrow(DioError(requestOptions: RequestOptions(path: "")));
 
-      var config = OauthPasswordConfig(
+      var config = OAuthPasswordConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         userCredentials: _anyCredentials,
@@ -483,7 +483,7 @@ void main() {
               data: {},
               headers: _anyHeaders)));
 
-      var config = OauthPasswordConfig(
+      var config = OAuthPasswordConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         userCredentials: _anyCredentials,
@@ -519,7 +519,7 @@ void main() {
               headers: _anyHeaders)));
 
       // and a token storage is put into the config
-      var config = OauthClientCredentialsConfig(
+      var config = OAuthClientCredentialsConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         httpClient: _mockClient,
@@ -541,7 +541,7 @@ void main() {
           _ANOTHER_REFRESH_TOKEN,
           DateTime.now().add(Duration(minutes: 10)))));
 
-      var config = OauthClientCredentialsConfig(
+      var config = OAuthClientCredentialsConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         httpClient: _mockClient,
@@ -576,7 +576,7 @@ void main() {
               headers: _anyHeaders)));
 
       // and a token storage is put into the config
-      var config = OauthClientCredentialsConfig(
+      var config = OAuthClientCredentialsConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         httpClient: _mockClient,
@@ -608,7 +608,7 @@ void main() {
               headers: _anyHeaders)));
 
       // and a token storage is put into the config
-      var config = OauthClientCredentialsConfig(
+      var config = OAuthClientCredentialsConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         httpClient: _mockClient,
@@ -651,7 +651,7 @@ void main() {
           _ANOTHER_ACCESS_TOKEN,
           _ANOTHER_REFRESH_TOKEN,
           DateTime.now().subtract(Duration(minutes: 10)))));
-      var config = OauthClientCredentialsConfig(
+      var config = OAuthClientCredentialsConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         httpClient: _mockClient,
@@ -706,7 +706,7 @@ void main() {
           null, // no refresh token
           DateTime.now().subtract(Duration(minutes: 10)))));
 
-      var config = OauthClientCredentialsConfig(
+      var config = OAuthClientCredentialsConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         httpClient: _mockClient,
