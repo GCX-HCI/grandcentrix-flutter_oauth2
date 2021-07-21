@@ -161,7 +161,7 @@ abstract class OAuthConfig {
   final TokenStorage? tokenStorage;
 
   /// Function called when an error response is received. Default is validating OAuth 2.0 fields
-  final Function(Response?) errorHandler;
+  late final Function(Response?) errorHandler;
 
   /// Additional headers to add to the token request
   late final Map<String, dynamic> additionalHeaders;
@@ -180,16 +180,17 @@ abstract class OAuthConfig {
     return body;
   }
 
-  OAuthConfig({
-    required this.authorizationEndpoint,
-    required this.clientCredentials,
-    required Map<String, dynamic>? additionalHeaders,
-    required this.tokenStorage,
-    required this.errorHandler,
-    required Dio? httpClient,
-  }) {
+  OAuthConfig(
+    this.authorizationEndpoint,
+    this.clientCredentials,
+    Map<String, dynamic>? additionalHeaders,
+    this.tokenStorage,
+    Function(Response?)? errorHandler,
+    Dio? httpClient,
+  ) {
     this.additionalHeaders = additionalHeaders ?? {};
     this.httpClient = httpClient ?? Dio();
+    this.errorHandler = errorHandler ?? _defaultErrorHandler;
   }
 }
 
@@ -206,12 +207,12 @@ class OAuthPasswordConfig extends OAuthConfig {
     Function(Response?)? errorHandler,
     Dio? httpClient,
   }) : super(
-          authorizationEndpoint: authorizationEndpoint,
-          clientCredentials: clientCredentials,
-          additionalHeaders: additionalHeaders,
-          tokenStorage: tokenStorage,
-          errorHandler: errorHandler = _defaultErrorHandler,
-          httpClient: httpClient,
+          authorizationEndpoint,
+          clientCredentials,
+          additionalHeaders,
+          tokenStorage,
+          errorHandler,
+          httpClient,
         );
 
   @override
@@ -231,12 +232,12 @@ class OAuthClientCredentialsConfig extends OAuthConfig {
     Function(Response?)? errorHandler,
     Dio? httpClient,
   }) : super(
-          authorizationEndpoint: authorizationEndpoint,
-          clientCredentials: clientCredentials,
-          additionalHeaders: additionalHeaders,
-          tokenStorage: tokenStorage,
-          errorHandler: errorHandler = _defaultErrorHandler,
-          httpClient: httpClient,
+          authorizationEndpoint,
+          clientCredentials,
+          additionalHeaders,
+          tokenStorage,
+          errorHandler,
+          httpClient,
         );
 
   @override
@@ -254,12 +255,12 @@ class OAuthRefreshTokenConfig extends OAuthConfig {
     Function(Response?)? errorHandler,
     Dio? httpClient,
   }) : super(
-          authorizationEndpoint: authorizationEndpoint,
-          clientCredentials: clientCredentials,
-          additionalHeaders: additionalHeaders,
-          tokenStorage: tokenStorage,
-          errorHandler: errorHandler = _defaultErrorHandler,
-          httpClient: httpClient,
+          authorizationEndpoint,
+          clientCredentials,
+          additionalHeaders,
+          tokenStorage,
+          errorHandler,
+          httpClient,
         );
 
   @override
@@ -288,12 +289,12 @@ class OAuthAuthCodeConfig extends OAuthConfig {
     Function(Response?)? errorHandler,
     Dio? httpClient,
   }) : super(
-          authorizationEndpoint: authorizationEndpoint,
-          clientCredentials: clientCredentials,
-          additionalHeaders: additionalHeaders,
-          tokenStorage: tokenStorage,
-          errorHandler: errorHandler = _defaultErrorHandler,
-          httpClient: httpClient,
+          authorizationEndpoint,
+          clientCredentials,
+          additionalHeaders,
+          tokenStorage,
+          errorHandler,
+          httpClient,
         );
 
   @override
