@@ -80,7 +80,7 @@ void main() {
       when(_mockTokenStorage.read()).thenAnswer(((_) async => null));
 
       // And the authorization method is set to "refresh_token"
-      var config = OAuthClientCredentialsConfig(
+      var config = OAuthRefreshTokenConfig(
         authorizationEndpoint: _anyAuthorizationEndpoint,
         clientCredentials: _anyCredentials,
         httpClient: _mockClient,
