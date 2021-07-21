@@ -159,11 +159,7 @@ class OAuth2 {
           options: options);
       return Token.fromResponse(response, startTime);
     } on DioError catch (e) {
-      if (e.response != null) {
-        this._config.errorHandler(e.response);
-      } else {
-        throw Exception("Error when trying to send request");
-      }
+      this._config.errorHandler(e.response);
     }
 
     return null;
