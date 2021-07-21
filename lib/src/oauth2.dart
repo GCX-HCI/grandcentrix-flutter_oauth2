@@ -106,7 +106,7 @@ class OAuth2 {
   }
 
   Future _onNewToken(Token? token) async {
-    await _config.tokenStorage?.write(_latestToken);
+    await _config.tokenStorage?.write(token);
   }
 
   /// Gets a new token considering the configured grant type
