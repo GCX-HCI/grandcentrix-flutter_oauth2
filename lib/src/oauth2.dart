@@ -267,8 +267,6 @@ class OauthClientCredentialsConfig extends OauthConfig {
 typedef Future<String> AuthCodeProvider();
 
 class OauthAuthCodeConfig extends OauthConfig {
-  final GrantType grantType = GrantType.AUTHORIZATION_CODE;
-
   /// The provider for the current authorization code used to authorize. Only used if grant type is [GrantType.AUTHORIZATION_CODE]
   final AuthCodeProvider authorizationCodeProvider;
 
