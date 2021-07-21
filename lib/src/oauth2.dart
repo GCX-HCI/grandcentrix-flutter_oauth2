@@ -92,7 +92,7 @@ class OAuth2 {
     }
 
     if (_latestToken?.isExpired == true) {
-      _latestToken = await _getToken(refreshToken: _latestToken?.refreshToken);
+      _latestToken = await _getToken(_latestToken?.refreshToken);
       await _onNewToken(_latestToken);
     }
 
@@ -110,7 +110,7 @@ class OAuth2 {
   }
 
   /// Gets a new token considering the configured grant type
-  Future<Token?> _getToken({String? refreshToken}) async {
+  Future<Token?> _getToken([String? refreshToken]) async {
     if (refreshToken != null) {
       return _requestToken(
           await _config.createRefreshTokenRequestBody(refreshToken));
