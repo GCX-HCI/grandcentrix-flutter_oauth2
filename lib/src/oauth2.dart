@@ -223,18 +223,17 @@ class OauthPasswordConfig extends OauthConfig {
     Function(Response?)? errorHandler,
     Dio? httpClient,
   }) : super(
-    grantType: GrantType.PASSWORD,
-    authorizationEndpoint: authorizationEndpoint,
-    clientCredentials: clientCredentials,
-    additionalHeaders: additionalHeaders,
-    tokenStorage: tokenStorage,
-    errorHandler: errorHandler = _defaultErrorHandler,
-    httpClient: httpClient,
-  );
+          grantType: GrantType.PASSWORD,
+          authorizationEndpoint: authorizationEndpoint,
+          clientCredentials: clientCredentials,
+          additionalHeaders: additionalHeaders,
+          tokenStorage: tokenStorage,
+          errorHandler: errorHandler = _defaultErrorHandler,
+          httpClient: httpClient,
+        );
 
   @override
-  Future<Map<String, dynamic>> createTokenRequestBody() async =>
-      {
+  Future<Map<String, dynamic>> createTokenRequestBody() async => {
         RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.PASSWORD,
         RequestDataFieldConst.USERNAME: userCredentials.username,
         RequestDataFieldConst.PASSWORD: userCredentials.password,
@@ -250,18 +249,17 @@ class OauthClientCredentialsConfig extends OauthConfig {
     Function(Response?)? errorHandler,
     Dio? httpClient,
   }) : super(
-    grantType: GrantType.CLIENT_CREDENTIALS,
-    authorizationEndpoint: authorizationEndpoint,
-    clientCredentials: clientCredentials,
-    additionalHeaders: additionalHeaders,
-    tokenStorage: tokenStorage,
-    errorHandler: errorHandler = _defaultErrorHandler,
-    httpClient: httpClient,
-  );
+          grantType: GrantType.CLIENT_CREDENTIALS,
+          authorizationEndpoint: authorizationEndpoint,
+          clientCredentials: clientCredentials,
+          additionalHeaders: additionalHeaders,
+          tokenStorage: tokenStorage,
+          errorHandler: errorHandler = _defaultErrorHandler,
+          httpClient: httpClient,
+        );
 
   @override
-  Future<Map<String, dynamic>> createTokenRequestBody() async =>
-      {
+  Future<Map<String, dynamic>> createTokenRequestBody() async => {
         RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS,
       };
 }
@@ -287,14 +285,14 @@ class OauthAuthCodeConfig extends OauthConfig {
     Function(Response?)? errorHandler,
     Dio? httpClient,
   }) : super(
-    grantType: GrantType.AUTHORIZATION_CODE,
-    authorizationEndpoint: authorizationEndpoint,
-    clientCredentials: clientCredentials,
-    additionalHeaders: additionalHeaders,
-    tokenStorage: tokenStorage,
-    errorHandler: errorHandler = _defaultErrorHandler,
-    httpClient: httpClient,
-  );
+          grantType: GrantType.AUTHORIZATION_CODE,
+          authorizationEndpoint: authorizationEndpoint,
+          clientCredentials: clientCredentials,
+          additionalHeaders: additionalHeaders,
+          tokenStorage: tokenStorage,
+          errorHandler: errorHandler = _defaultErrorHandler,
+          httpClient: httpClient,
+        );
 
   @override
   Future<Map<String, dynamic>> createTokenRequestBody() async {
@@ -302,7 +300,7 @@ class OauthAuthCodeConfig extends OauthConfig {
       RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.AUTHORIZATION_CODE,
       RequestDataFieldConst.REDIRECT_URI: redirectUri,
       RequestDataFieldConst.AUTHORIZATION_CODE:
-      await authorizationCodeProvider.call(),
+          await authorizationCodeProvider.call(),
     };
 
     if (clientCredentials != null) {
