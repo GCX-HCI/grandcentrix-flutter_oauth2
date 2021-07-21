@@ -111,8 +111,11 @@ class OAuth2 {
 
   /// Gets a new token considering the configured grant type
   Future<Token?> _getToken({String? refreshToken}) async {
-    return _requestToken(
-        await _config.createTokenRequestBody(refreshToken: refreshToken));
+    if (refreshToken != null) {
+      return _requestToken(
+          await _config.createRefreshTokenRequestBody(refreshToken));
+    }
+    return _requestToken(await _config.createTokenRequestBody());
   }
 
   /// General token request used to get and refresh token
@@ -166,7 +169,16 @@ abstract class OAuthConfig {
   /// The HTTP client to use
   late final Dio httpClient;
 
-  Future<Map<String, dynamic>> createTokenRequestBody({String? refreshToken});
+  Future<Map<String, dynamic>> createTokenRequestBody();
+
+  Future<Map<String, dynamic>> createRefreshTokenRequestBody(
+      String refreshToken) async {
+    var body = {
+      RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.REFRESH_TOKEN,
+      RequestDataFieldConst.REFRESH_TOKEN: refreshToken
+    };
+    return body;
+  }
 
   OAuthConfig({
     required this.authorizationEndpoint,
@@ -203,9 +215,7 @@ class OAuthPasswordConfig extends OAuthConfig {
         );
 
   @override
-  Future<Map<String, dynamic>> createTokenRequestBody(
-          {String? refreshToken}) async =>
-      {
+  Future<Map<String, dynamic>> createTokenRequestBody() async => {
         RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.PASSWORD,
         RequestDataFieldConst.USERNAME: userCredentials.username,
         RequestDataFieldConst.PASSWORD: userCredentials.password,
@@ -230,9 +240,7 @@ class OAuthClientCredentialsConfig extends OAuthConfig {
         );
 
   @override
-  Future<Map<String, dynamic>> createTokenRequestBody(
-          {String? refreshToken}) async =>
-      {
+  Future<Map<String, dynamic>> createTokenRequestBody() async => {
         RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS,
       };
 }
@@ -255,17 +263,9 @@ class OAuthRefreshTokenConfig extends OAuthConfig {
         );
 
   @override
-  Future<Map<String, dynamic>> createTokenRequestBody(
-      {String? refreshToken}) async {
-    if (refreshToken == null) {
-      throw StateError(
-          'Set GrantType to REFRESH_TOKEN, but cannot find token in TokenStorage');
-    }
-    var body = {
-      RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.REFRESH_TOKEN,
-      RequestDataFieldConst.REFRESH_TOKEN: refreshToken
-    };
-    return body;
+  Future<Map<String, dynamic>> createTokenRequestBody() async {
+    throw StateError(
+        'Set GrantType to REFRESH_TOKEN, but cannot find token in TokenStorage');
   }
 }
 
@@ -297,8 +297,7 @@ class OAuthAuthCodeConfig extends OAuthConfig {
         );
 
   @override
-  Future<Map<String, dynamic>> createTokenRequestBody(
-      {String? refreshToken}) async {
+  Future<Map<String, dynamic>> createTokenRequestBody() async {
     var body = {
       RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.AUTHORIZATION_CODE,
       RequestDataFieldConst.REDIRECT_URI: redirectUri,
