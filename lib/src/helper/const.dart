@@ -10,13 +10,12 @@ class AuthorizationTypeConst {
   static const BASIC = 'Basic';
 }
 
-enum GrantType { PASSWORD, CLIENT_CREDENTIALS, REFRESH_TOKEN }
-
 /// Grant types included in OAuth 2.0
 class GrantTypeConst {
   static const PASSWORD = 'password';
   static const CLIENT_CREDENTIALS = 'client_credentials';
   static const REFRESH_TOKEN = 'refresh_token';
+  static const AUTHORIZATION_CODE = 'authorization_code';
 }
 
 /// Fields which are possibly included in a OAuth 2.0 response
@@ -39,4 +38,8 @@ class RequestDataFieldConst {
   static const USERNAME = 'username';
   static const PASSWORD = 'password';
   static const REFRESH_TOKEN = 'refresh_token';
+  static const REDIRECT_URI = 'redirect_uri';
+  static const CLIENT_ID = 'client_id';
+  static const CLIENT_SECRET = 'client_secret';
+  static const AUTHORIZATION_CODE = 'code';
 }

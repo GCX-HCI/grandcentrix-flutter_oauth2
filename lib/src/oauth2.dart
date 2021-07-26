@@ -12,46 +12,6 @@ class Credentials {
   Credentials(this.username, this.password);
 }
 
-/// Configuration for [OAuth2]
-class Config {
-  /// The endpoint to send the token request to
-  Uri authorizationEndpoint;
-
-  /// The client credentials used to authorize
-  Credentials? clientCredentials;
-
-  /// The user credentials used to authorize. Only used if grant type is [GrantType.PASSWORD]
-  Credentials? userCredentials;
-
-  /// Additional headers to add to the token request
-  late Map<String, dynamic> additionalHeaders;
-
-  /// Grant type as defined by [GrantType]. Default is [GrantType.CLIENT_CREDENTIALS]
-  GrantType grantType;
-
-  /// Storage to save token into. By default tokens are not saved
-  TokenStorage? tokenStorage;
-
-  /// Function called when an error response is received. Default is validating OAuth 2.0 fields
-  Function(Response?) errorHandler;
-
-  /// The HTTP client to use
-  late Dio httpClient;
-
-  Config(
-      {required this.authorizationEndpoint,
-      this.grantType = GrantType.CLIENT_CREDENTIALS,
-      this.clientCredentials,
-      this.userCredentials,
-      Map<String, dynamic>? additionalHeaders,
-      this.tokenStorage,
-      this.errorHandler = _defaultErrorHandler,
-      Dio? httpClient}) {
-    this.additionalHeaders = additionalHeaders ?? {};
-    this.httpClient = httpClient ?? Dio();
-  }
-}
-
 /// Validates an error response and throws an exception in the end
 _defaultErrorHandler(Response? response) {
   if (response == null || response.data is! Map) {
@@ -109,7 +69,7 @@ _defaultErrorHandler(Response? response) {
 /// Handles the OAuth 2.0 flow.
 /// It's the main class that you have to interact with.
 class OAuth2 {
-  Config _config;
+  OAuthConfig _config;
   Token? _latestToken;
 
   OAuth2(this._config);
@@ -132,12 +92,7 @@ class OAuth2 {
     }
 
     if (_latestToken?.isExpired == true) {
-      if (_latestToken?.refreshToken != null) {
-        _latestToken = await _refreshToken(_latestToken?.refreshToken);
-      } else {
-        // If there is no refresh token, try to get a new token by credentials
-        _latestToken = await _getToken();
-      }
+      _latestToken = await _getToken(_latestToken?.refreshToken);
       await _onNewToken(_latestToken);
     }
 
@@ -151,35 +106,16 @@ class OAuth2 {
   }
 
   Future _onNewToken(Token? token) async {
-    await _config.tokenStorage?.write(_latestToken);
+    await _config.tokenStorage?.write(token);
   }
 
   /// Gets a new token considering the configured grant type
-  Future<Token?> _getToken() async {
-    if (_config.grantType == GrantType.REFRESH_TOKEN) {
-      throw StateError(
-          'Set GrantType to REFRESH_TOKEN, but cannot find token in TokenStorage');
+  Future<Token?> _getToken([String? refreshToken]) async {
+    if (refreshToken != null) {
+      return _requestToken(
+          await _config.createRefreshTokenRequestBody(refreshToken));
     }
-
-    var body = _config.grantType == GrantType.CLIENT_CREDENTIALS
-        ? {RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS}
-        : {
-            RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.PASSWORD,
-            RequestDataFieldConst.USERNAME: _config.userCredentials!.username,
-            RequestDataFieldConst.PASSWORD: _config.userCredentials!.password
-          };
-
-    return _requestToken(body);
-  }
-
-  /// Refreshes the current token by using the refresh token
-  Future<Token?> _refreshToken(String? refreshToken) async {
-    var body = {
-      RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.REFRESH_TOKEN,
-      RequestDataFieldConst.REFRESH_TOKEN: refreshToken
-    };
-
-    return _requestToken(body);
+    return _requestToken(await _config.createTokenRequestBody());
   }
 
   /// General token request used to get and refresh token
@@ -207,13 +143,176 @@ class OAuth2 {
           options: options);
       return Token.fromResponse(response, startTime);
     } on DioError catch (e) {
-      if (e.response != null) {
-        this._config.errorHandler(e.response);
-      } else {
-        throw Exception("Error when trying to send request");
-      }
+      this._config.errorHandler(e.response);
     }
 
     return null;
+  }
+}
+
+abstract class OAuthConfig {
+  /// The endpoint to send the token request to
+  final Uri authorizationEndpoint;
+
+  /// The client credentials used to authorize
+  final Credentials? clientCredentials;
+
+  /// Storage to save token into. By default tokens are not saved
+  final TokenStorage? tokenStorage;
+
+  /// Function called when an error response is received. Default is validating OAuth 2.0 fields
+  late final Function(Response?) errorHandler;
+
+  /// Additional headers to add to the token request
+  late final Map<String, dynamic> additionalHeaders;
+
+  /// The HTTP client to use
+  late final Dio httpClient;
+
+  Future<Map<String, dynamic>> createTokenRequestBody();
+
+  Future<Map<String, dynamic>> createRefreshTokenRequestBody(
+      String refreshToken) async {
+    var body = {
+      RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.REFRESH_TOKEN,
+      RequestDataFieldConst.REFRESH_TOKEN: refreshToken
+    };
+    return body;
+  }
+
+  OAuthConfig(
+    this.authorizationEndpoint,
+    this.clientCredentials,
+    Map<String, dynamic>? additionalHeaders,
+    this.tokenStorage,
+    Function(Response?)? errorHandler,
+    Dio? httpClient,
+  ) {
+    this.additionalHeaders = additionalHeaders ?? {};
+    this.httpClient = httpClient ?? Dio();
+    this.errorHandler = errorHandler ?? _defaultErrorHandler;
+  }
+}
+
+class OAuthPasswordConfig extends OAuthConfig {
+  /// The user credentials used to authorize.
+  final Credentials userCredentials;
+
+  OAuthPasswordConfig({
+    required this.userCredentials,
+    required Uri authorizationEndpoint,
+    clientCredentials,
+    Map<String, dynamic>? additionalHeaders,
+    TokenStorage? tokenStorage,
+    Function(Response?)? errorHandler,
+    Dio? httpClient,
+  }) : super(
+          authorizationEndpoint,
+          clientCredentials,
+          additionalHeaders,
+          tokenStorage,
+          errorHandler,
+          httpClient,
+        );
+
+  @override
+  Future<Map<String, dynamic>> createTokenRequestBody() async => {
+        RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.PASSWORD,
+        RequestDataFieldConst.USERNAME: userCredentials.username,
+        RequestDataFieldConst.PASSWORD: userCredentials.password,
+      };
+}
+
+class OAuthClientCredentialsConfig extends OAuthConfig {
+  OAuthClientCredentialsConfig({
+    required Uri authorizationEndpoint,
+    required Credentials clientCredentials,
+    Map<String, dynamic>? additionalHeaders,
+    TokenStorage? tokenStorage,
+    Function(Response?)? errorHandler,
+    Dio? httpClient,
+  }) : super(
+          authorizationEndpoint,
+          clientCredentials,
+          additionalHeaders,
+          tokenStorage,
+          errorHandler,
+          httpClient,
+        );
+
+  @override
+  Future<Map<String, dynamic>> createTokenRequestBody() async => {
+        RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.CLIENT_CREDENTIALS,
+      };
+}
+
+class OAuthRefreshTokenConfig extends OAuthConfig {
+  OAuthRefreshTokenConfig({
+    required Uri authorizationEndpoint,
+    required Credentials clientCredentials,
+    Map<String, dynamic>? additionalHeaders,
+    TokenStorage? tokenStorage,
+    Function(Response?)? errorHandler,
+    Dio? httpClient,
+  }) : super(
+          authorizationEndpoint,
+          clientCredentials,
+          additionalHeaders,
+          tokenStorage,
+          errorHandler,
+          httpClient,
+        );
+
+  @override
+  Future<Map<String, dynamic>> createTokenRequestBody() async {
+    throw StateError(
+        'Set GrantType to REFRESH_TOKEN, but cannot find token in TokenStorage');
+  }
+}
+
+typedef Future<String> AuthCodeProvider();
+
+class OAuthAuthCodeConfig extends OAuthConfig {
+  /// The provider for the current authorization code used to authorize.
+  final AuthCodeProvider authorizationCodeProvider;
+
+  /// The redirect uri used to fetch the authorization code.
+  final String? redirectUri;
+
+  OAuthAuthCodeConfig({
+    required this.authorizationCodeProvider,
+    required this.redirectUri,
+    clientCredentials,
+    required Uri authorizationEndpoint,
+    Map<String, dynamic>? additionalHeaders,
+    TokenStorage? tokenStorage,
+    Function(Response?)? errorHandler,
+    Dio? httpClient,
+  }) : super(
+          authorizationEndpoint,
+          clientCredentials,
+          additionalHeaders,
+          tokenStorage,
+          errorHandler,
+          httpClient,
+        );
+
+  @override
+  Future<Map<String, dynamic>> createTokenRequestBody() async {
+    var body = {
+      RequestDataFieldConst.GRANT_TYPE: GrantTypeConst.AUTHORIZATION_CODE,
+      RequestDataFieldConst.REDIRECT_URI: redirectUri,
+      RequestDataFieldConst.AUTHORIZATION_CODE:
+          await authorizationCodeProvider.call(),
+    };
+
+    if (clientCredentials != null) {
+      body.addAll({
+        RequestDataFieldConst.CLIENT_ID: clientCredentials!.username,
+        RequestDataFieldConst.CLIENT_SECRET: clientCredentials!.password,
+      });
+    }
+
+    return body;
   }
 }
